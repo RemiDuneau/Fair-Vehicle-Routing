@@ -1,0 +1,29 @@
+Dijkstra
+Average distance travelled by vehicles per time iteration: 28.253995
+Average number of trips completed: 1.6392 (standard deviation: 0.8979546363885008)
+Road 0 -> 3 total vehicles added: 1857
+Road 0 -> 1 total vehicles added: 1546
+Road 0 -> 2 total vehicles added: 1775
+Road 1 -> 3 total vehicles added: 1404
+Road 2 -> 3 total vehicles added: 1916
+Road 4 -> 2 total vehicles added: 767
+
+Greedy (Path 4 -> 2 -> 3 is dijkstra)
+Average distance travelled by vehicles per time iteration: 29.734605000000002
+Average number of trips completed: 1.7172 (standard deviation: 0.9404008408634047)
+Road 0 -> 3 total vehicles added: 1878
+Road 0 -> 1 total vehicles added: 1657
+Road 0 -> 2 total vehicles added: 1855
+Road 1 -> 3 total vehicles added: 1428
+Road 2 -> 3 total vehicles added: 1996
+Road 4 -> 2 total vehicles added: 767
+
+Least density
+Average distance travelled by vehicles per time iteration: 31.165836
+Average number of trips completed: 1.7512 (standard deviation: 1.083544935778457)
+Road 0 -> 3 total vehicles added: 1770
+Road 0 -> 1 total vehicles added: 1984
+Road 0 -> 2 total vehicles added: 1752
+Road 1 -> 3 total vehicles added: 1687
+Road 2 -> 3 total vehicles added: 1905
+Road 4 -> 2 total vehicles added: 767
