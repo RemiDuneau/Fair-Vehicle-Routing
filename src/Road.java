@@ -15,7 +15,7 @@ public class Road implements Cloneable {
     private int length, maxSpeed, currentSpeed, timeToTraverse, totalVehiclesAdded = 0;
 
     //state variables
-    private double density, maxDensity = 1.0; //proportion of occupied cells
+    private double density, maxDensity = 1.0, densitySum = 0; //proportion of occupied cells
 
     /**
      * Clones the instance of this Road (creates a shallow copy)
@@ -41,6 +41,7 @@ public class Road implements Cloneable {
         return currentSpeed;
     }
 
+
     /**
      * Calculates the proportion of road occupied by a vehicle (i.e the traffic density), and returns that value.
      * @return the traffic density
@@ -49,11 +50,19 @@ public class Road implements Cloneable {
         return density = vehicles.size() * Vehicle.VEHICLE_LENGTH / (double) length;
     }
 
+    /**
+     * Calculates the road density, and adds it to {@code densitySum}. This should only be used at the end of the time increment.
+     */
+    public void incrementDensitySum() {
+        calculateDensity();
+        densitySum += density;
+    }
+
+
     private int greenbergSpeedEquation() {
         if (vehicles.size() == 0) return maxSpeed; //return max speed if road is empty
         return Math.min( maxSpeed, (int) (maxSpeed * Math.log(maxDensity/density)) );
     }
-
 
     public int getMaxSpeed() {
         return maxSpeed;
@@ -93,6 +102,10 @@ public class Road implements Cloneable {
 
     public double getDensity() {
         return  density;
+    }
+
+    public double getDensitySum() {
+        return densitySum;
     }
 
     public void addVehicle(Vehicle vehicle) {

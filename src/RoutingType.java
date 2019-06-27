@@ -8,7 +8,6 @@ public class RoutingType {
     public static final int TYPE_LEAST_DENSITY = 2;
     public static final int TYPE_FUTURE_DIJKSTRA = 3;
     public static final int TYPE_FUTURE_LEAST_DENSITY = 4;
-    public static int acc = 0;
 
     /**
      * Finds the shortest path from the start node to the end node taking the path of shortest overall time
@@ -296,6 +295,8 @@ public class RoutingType {
         //-------------- CALCULATING TIME TAKEN --------------
 
         double totalCost = 0;
+        int maxTimeSteps = 600;
+        int currentTimeSteps = 0;
         Node currentNode = nodesToCopyMap.get(startNode);
         Node endNodeCopy = nodesToCopyMap.get(endNode);
 
@@ -312,17 +313,31 @@ public class RoutingType {
 
             //determine number of timesteps to get to next node
             Road currentRoadCopy = pathCopy.pop();
-            currentRoadCopy.addVehicle(v);
             v.setCurrentRoad(currentRoadCopy);
             v.setCurrentSpeed(currentRoadCopy.calculateCurrentSpeed());
             int nTimeSteps = v.calculateTimeIncrementsToFinishRoad();
             currentNode = currentRoadCopy.getEndNode();
 
-            if (isLeastDensity) totalCost += currentRoadCopy.getDensity();
-            else totalCost += nTimeSteps;
+            totalCost += (isLeastDensity) ? currentRoadCopy.getDensity() : nTimeSteps;
 
             if (currentNode == endNodeCopy) break breakpoint;
 
+            //stop if reached threshold time steps, and calc rest of cost based on cars at this time step (used so algorithm doesn't take forever)
+            currentTimeSteps += nTimeSteps;
+            if (currentTimeSteps > maxTimeSteps) {
+                for (int i = 0; i < pathCopy.size(); i++) { //for every road
+                    Road road = pathCopy.pop();
+                    if (isLeastDensity) {
+                        totalCost += road.getDensity();
+                    }
+                    else {
+                        v.setCurrentRoad(road);
+                        v.setCurrentSpeed(road.calculateCurrentSpeed());
+                        totalCost += v.calculateTimeIncrementsToFinishRoad();
+                    }
+                }
+                break breakpoint;
+            }
 
             //simulate those timesteps for every vehicle in the graph
             for (int i = 0; i < nTimeSteps; i++) {
@@ -330,7 +345,6 @@ public class RoutingType {
                     vehicle.move();
                 }
             }
-
         }
         return totalCost;
     }

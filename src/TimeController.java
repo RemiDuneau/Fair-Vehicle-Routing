@@ -5,7 +5,7 @@ public class TimeController {
     public static int NUM_ITERATIONS = 400;
     public static final int SEED = 1234567890;
     public static final Random RANDOM = new Random();
-    public static final int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = 15;
+    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES/200, 1);
 
     public TimeController() {
         RANDOM.setSeed(SEED);
@@ -20,75 +20,7 @@ public class TimeController {
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
 
 
-    public static void main(String[] args) {
-        TimeController controller = new TimeController();
-        controller.createVehicles();
-        controller.initNetworkForSimpleExample();
-
-        //find all paths every vehicle's start node to every vehicle's end node
-        for (Vehicle v : controller.vehicles) {
-            Node startNode = v.getStartNode();
-            Node endNode = v.getEndNode();
-            boolean contains = false;
-            for (Tuple<Node, Node> tuple : controller.allPathsMap.keySet()) {
-                if ((tuple.x == startNode) && (tuple.y == endNode)) {
-                    contains = true;
-                }
-            }
-            if (!contains) {
-                ArrayList<Stack<Road>> allPaths = RoutingType.dfsFindAllPaths(startNode, endNode);
-                controller.allPathsMap.put(new Tuple<Node, Node>(startNode, endNode), allPaths);
-            }
-        }
-        System.out.println(controller.allPathsMap.size());
-
-
-        for (int i = 0; i < NUM_ITERATIONS; i++) {
-            System.out.println("----------------------\n" +
-                    "TIME: " + i);
-            controller.incrementTime();
-            System.out.println( "(Active Vehicles: " + controller.activeVehicles.size() + ")");
-            for (Road road : controller.roads) {
-                int totalSpeed = 0;
-                for (Vehicle vehicle : road.getVehicles()) {
-                    totalSpeed += vehicle.getCurrentSpeed();
-                }
-                double avgSpeed = (double) totalSpeed / (double) road.getVehicles().size();
-                System.out.println("ROAD: " + road.getNodesAsString()
-                        + "; Density = " + road.getDensity() + " (" + road.getVehicles().size() + " vehicles, avg speed: " + avgSpeed + ", time: " + road.getTimeToTraverse() + ")");
-            }
-        }
-
-        //vehicle/road tracking stats stuff
-        int totalDistance = 0;
-        int totalTripsFinished = 0;
-        int nVehicles = controller.vehicles.length;
-        for (Vehicle vehicle : controller.vehicles) {
-            totalDistance += vehicle.getTotalDistance();
-            totalTripsFinished += vehicle.getTripsFinished();
-        }
-        double avgDistance = totalDistance / (double) nVehicles;
-
-        System.out.println("Average distance travelled by vehicles per time iteration: " + (avgDistance/(double) NUM_ITERATIONS));
-
-        //average trips
-        double avgTripsFinished = totalTripsFinished / (double) nVehicles;
-
-        //calc standard deviation
-        int varianceTopBit = 0;
-        for (Vehicle vehicle : controller.vehicles) {
-            varianceTopBit += Math.pow(vehicle.getTripsFinished() - avgTripsFinished, 2);
-        }
-        double tripsCompletedStdDev = Math.sqrt(varianceTopBit/(double) (nVehicles-1));
-
-        System.out.println("Average number of trips completed: " + (avgTripsFinished) + " (standard deviation: " + tripsCompletedStdDev + ")");
-
-        for (Road road : controller.roads) {
-            System.out.println("Road " + road.getNodesAsString() + " total vehicles added: " + road.getTotalVehiclesAdded());
-        }
-    }
-
-    private void incrementTime() {
+    public void incrementTime() {
         addVehicle();
         moveVehicles();
         removeVehicles();
@@ -194,11 +126,12 @@ public class TimeController {
     private void updateSpeed() {
         for (Road road : roads) {
             road.calculateCurrentSpeed();
+            road.incrementDensitySum();
         }
     }
 
 
-    private void createVehicles() {
+    public void createVehicles() {
         for (int i = 0; i < NUM_VEHICLES; i++) {
             Vehicle vehicle = new Vehicle(RoutingType.TYPE_FUTURE_LEAST_DENSITY);
             vehicles[i] = vehicle;
@@ -206,7 +139,7 @@ public class TimeController {
         }
     }
 
-    private void initNetworkForSimpleExample() {
+    public void initNetworkForSimpleExample() {
 
         /*------- NETWORK -------
                      L
@@ -258,14 +191,39 @@ public class TimeController {
         nodes.add(node3);
         nodes.add(node4);
 
-        //update 1500 vehicles with start node 0 and end node 3, 1000 vehicles with start node 4 end node 3.
-        for (int i = 0; i < 1500; i++){
+        //update 3/4 of vehicles to start at node0, and 1/4 to start at node4
+        int j = 0;
+        for (int i = 0; i < 0.75*NUM_VEHICLES; i++){
             vehicles[i].setStartNode(node0);
             vehicles[i].setEndNode(node3);
+            j++;
         }
-        for (int i = 1500; i < 2500; i++){
+        for (int i = j; i < NUM_VEHICLES; i++){
             vehicles[i].setStartNode(node4);
             vehicles[i].setEndNode(node3);
         }
+    }
+
+    //----------- ACCESSOR METHODS
+
+
+    public Vehicle[] getVehicles() {
+        return vehicles;
+    }
+
+    public ArrayList<Vehicle> getInactiveVehicles() {
+        return inactiveVehicles;
+    }
+
+    public ArrayList<Vehicle> getActiveVehicles() {
+        return activeVehicles;
+    }
+
+    public ArrayList<Road> getRoads() {
+        return roads;
+    }
+
+    public Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> getAllPathsMap() {
+        return allPathsMap;
     }
 }
