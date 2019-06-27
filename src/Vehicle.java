@@ -71,7 +71,7 @@ public class Vehicle implements Cloneable {
     }
 
     public int calculateTimeIncrementsToFinishRoad() {
-        return (int) Math.ceil((double) (currentRoad.getLength()-roadDistance) / (double) currentSpeed);
+        return (int) Math.ceil((double) (currentRoad.getLength()) / (double) currentSpeed);
     }
 
     private void incrementDistances(int distance) {

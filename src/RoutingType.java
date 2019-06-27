@@ -6,7 +6,8 @@ public class RoutingType {
     public static final int TYPE_DIJKSTRA = 0;
     public static final int TYPE_FAIR = 1;
     public static final int TYPE_LEAST_DENSITY = 2;
-    public static final int TYPE_GREEDY = 3;
+    public static final int TYPE_FUTURE_DIJKSTRA = 3;
+    public static final int TYPE_FUTURE_LEAST_DENSITY = 4;
     public static int acc = 0;
 
     /**
@@ -137,7 +138,7 @@ public class RoutingType {
      * @param endNode the destination node
      * @return a list of paths ({@code Stack<Road>}) to get from the start node to the end node
      */
-    private static ArrayList<Stack<Road>> dfsFindAllPaths(Node startNode, Node endNode) {
+    public static ArrayList<Stack<Road>> dfsFindAllPaths(Node startNode, Node endNode) {
         ArrayList<ArrayList<Node>> nodePaths = new ArrayList<>();
         Stack<ArrayList<Node>> searchStack = new Stack<>();
         ArrayList<Node> start = new ArrayList<>();
@@ -182,7 +183,6 @@ public class RoutingType {
         return paths;
     }
 
-    //TODO: CHANGE THIS FUNCTION SO THAT IT CALCULATES THE PATHS ONCE AT THE START RATHER THAN EVERY TIME...
     /**
      *
      * @param startNode
@@ -190,14 +190,37 @@ public class RoutingType {
      * @param nodes
      * @param roads
      * @param activeVehicles
-     * @return
+     * @param allPaths
+     * @param isLeastDensity is true when measuring least density (i.e. {@code TYPE_FUTURE_LEAST_DENSITY}), and false otherwise
+     * @return the least cost path (i.e. {@code Stack<Road>})
      */
-    public static Stack<Road> greedy(Node startNode, Node endNode, List<Node> nodes, List<Road> roads, List<Vehicle> activeVehicles) {
-        ArrayList<Stack<Road>> paths = dfsFindAllPaths(startNode, endNode);
+    public static Stack<Road> future(Node startNode, Node endNode, List<Node> nodes, List<Road> roads,
+                                     List<Vehicle> activeVehicles, Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPaths,
+                                     boolean isLeastDensity) {
+
+        ArrayList<Stack<Road>> paths = new ArrayList<>();
+
+        //find list of paths wanted
+        for (Tuple tuple : allPaths.keySet()) {
+            if (tuple.x == startNode && tuple.y == endNode) {
+
+                //make a copy of every path (so subsequent vehicles can use the path without some of the roads missing due to previous vehicles)
+                for (Stack<Road> path : allPaths.get(tuple)) {
+                    Stack<Road> pathCopy = new Stack<>();
+                    pathCopy.addAll(path);
+                    paths.add(pathCopy);
+                }
+            }
+        }
+
+        //return if only one path can be taken (no need to find fastest)
+        if (paths.size() == 1) return paths.get(0);
+
+        //find optimal path
         Stack<Road> bestPath = new Stack<>();
-        int best = Integer.MAX_VALUE;
+        double best = Double.MAX_VALUE;
         for (Stack<Road> path : paths) {
-            int timeTaken = calculateFuture(startNode, endNode, nodes, roads, activeVehicles, path);
+            double timeTaken = calculateFuture(startNode, endNode, nodes, roads, activeVehicles, path, isLeastDensity);
             if (timeTaken < best) {
                 best = timeTaken;
                 bestPath = path;
@@ -206,8 +229,8 @@ public class RoutingType {
         return bestPath;
     }
 
-    public static int calculateFuture(Node startNode, Node endNode, List<Node> nodes, List<Road> roads, List<Vehicle> activeVehicles, Stack<Road> path) {
-        int totalTime = 0;
+    public static double calculateFuture(Node startNode, Node endNode, List<Node> nodes, List<Road> roads,
+                                      List<Vehicle> activeVehicles, Stack<Road> path, boolean isLeastDensity) {
 
         //-------------- CLONING --------------
         //clone roads
@@ -272,10 +295,11 @@ public class RoutingType {
 
         //-------------- CALCULATING TIME TAKEN --------------
 
+        double totalCost = 0;
         Node currentNode = nodesToCopyMap.get(startNode);
         Node endNodeCopy = nodesToCopyMap.get(endNode);
 
-        Vehicle v = new Vehicle(TYPE_GREEDY); //"dummy" of the vehicle a path will be created for
+        Vehicle v = new Vehicle(TYPE_FUTURE_DIJKSTRA); //"dummy" of the vehicle a path will be created for
 
         //copy path to new stack
         Stack<Road> pathCopy = new Stack<>();
@@ -294,7 +318,9 @@ public class RoutingType {
             int nTimeSteps = v.calculateTimeIncrementsToFinishRoad();
             currentNode = currentRoadCopy.getEndNode();
 
-            totalTime += nTimeSteps;
+            if (isLeastDensity) totalCost += currentRoadCopy.getDensity();
+            else totalCost += nTimeSteps;
+
             if (currentNode == endNodeCopy) break breakpoint;
 
 
@@ -306,7 +332,7 @@ public class RoutingType {
             }
 
         }
-        return totalTime;
+        return totalCost;
     }
 
     public static Stack<Road> fair() {

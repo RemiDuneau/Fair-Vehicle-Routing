@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Stack;
+import java.util.*;
 
 public class TimeController {
     public static int NUM_VEHICLES = 2500;
@@ -20,12 +17,31 @@ public class TimeController {
     private ArrayList<Vehicle> activeVehicles = new ArrayList<>();
     private ArrayList<Node> nodes = new ArrayList<>();
     private ArrayList<Road> roads = new ArrayList<>();
+    private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
 
 
     public static void main(String[] args) {
         TimeController controller = new TimeController();
         controller.createVehicles();
         controller.initNetworkForSimpleExample();
+
+        //find all paths every vehicle's start node to every vehicle's end node
+        for (Vehicle v : controller.vehicles) {
+            Node startNode = v.getStartNode();
+            Node endNode = v.getEndNode();
+            boolean contains = false;
+            for (Tuple<Node, Node> tuple : controller.allPathsMap.keySet()) {
+                if ((tuple.x == startNode) && (tuple.y == endNode)) {
+                    contains = true;
+                }
+            }
+            if (!contains) {
+                ArrayList<Stack<Road>> allPaths = RoutingType.dfsFindAllPaths(startNode, endNode);
+                controller.allPathsMap.put(new Tuple<Node, Node>(startNode, endNode), allPaths);
+            }
+        }
+        System.out.println(controller.allPathsMap.size());
+
 
         for (int i = 0; i < NUM_ITERATIONS; i++) {
             System.out.println("----------------------\n" +
@@ -111,9 +127,14 @@ public class TimeController {
                         vehicle.setPath(pathLeastDensity);
                         break;
 
-                    case RoutingType.TYPE_GREEDY:
-                        Stack<Road> pathGreedy = RoutingType.greedy(vehicle.getStartNode(),vehicle.getEndNode(),nodes,roads,activeVehicles);
-                        vehicle.setPath(pathGreedy);
+                    case RoutingType.TYPE_FUTURE_DIJKSTRA:
+                        Stack<Road> pathFutureTime = RoutingType.future(vehicle.getStartNode(),vehicle.getEndNode(),nodes,roads,activeVehicles, allPathsMap, false);
+                        vehicle.setPath(pathFutureTime);
+                        break;
+
+                    case RoutingType.TYPE_FUTURE_LEAST_DENSITY:
+                        Stack<Road> pathFutureDensity = RoutingType.future(vehicle.getStartNode(),vehicle.getEndNode(),nodes,roads,activeVehicles, allPathsMap, true);
+                        vehicle.setPath(pathFutureDensity);
                         break;
 
                     default:
@@ -179,7 +200,7 @@ public class TimeController {
 
     private void createVehicles() {
         for (int i = 0; i < NUM_VEHICLES; i++) {
-            Vehicle vehicle = new Vehicle(RoutingType.TYPE_GREEDY);
+            Vehicle vehicle = new Vehicle(RoutingType.TYPE_FUTURE_LEAST_DENSITY);
             vehicles[i] = vehicle;
             inactiveVehicles.add(vehicle);
         }
@@ -245,7 +266,6 @@ public class TimeController {
         for (int i = 1500; i < 2500; i++){
             vehicles[i].setStartNode(node4);
             vehicles[i].setEndNode(node3);
-            vehicles[i].setRoutingType(RoutingType.TYPE_DIJKSTRA);
         }
     }
 }
