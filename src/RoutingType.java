@@ -47,10 +47,13 @@ public class RoutingType {
                 return createStack(endNode, previousNodeMap);
             }
 
+            if (currentNode == null) return new Stack<>();
+
             //visit neighbours and add to known nodes
             for (Node neighbour : currentNode.getNeighbours().keySet()) {
                 if (unvisited.contains(neighbour)) {
-                    int time = timesMap.get(currentNode) + currentNode.getRoad(neighbour).getTimeToTraverse();
+                    Road road = currentNode.getRoad(neighbour);
+                    int time = (road.getDensity() >= 1.0) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse();
                     if (time < timesMap.get(neighbour)) {
                         timesMap.put(neighbour, time);
                         previousNodeMap.put(neighbour, currentNode);
@@ -97,15 +100,14 @@ public class RoutingType {
             }
 
             //return road path if currentNode is endNode
-            if (currentNode == endNode) {
-                return createStack(endNode, previousNodeMap);
-            }
+            if (currentNode == endNode) return createStack(endNode, previousNodeMap);
 
+            if (currentNode == null) return new Stack<>();
             //visit neighbours and add to known nodes
             for (Node neighbour : currentNode.getNeighbours().keySet()) {
                 if (unvisited.contains(neighbour)) {
-                    double roadDensity = currentNode.getRoad(neighbour).calculateDensity();
-                    double density = densitiesMap.get(currentNode) + roadDensity;
+                    Road road = currentNode.getRoad(neighbour);
+                    double density = (road.getDensity() >= 1.0) ? Double.MAX_VALUE-10 : densitiesMap.get(currentNode) + road.calculateDensity();
                     if (density < densitiesMap.get(neighbour)) {
                         densitiesMap.put(neighbour, density);
                         previousNodeMap.put(neighbour, currentNode);
@@ -230,7 +232,7 @@ public class RoutingType {
 
     public static double calculateFuture(Node startNode, Node endNode, List<Node> nodes, List<Road> roads,
                                       List<Vehicle> activeVehicles, Stack<Road> path, boolean isLeastDensity) {
-
+        //TODO: improve efficiency by only looping through the vehicles which have the current road in their path (will reduce accuracy because other cars not on that road may affect cars which will go on that road)
         //-------------- CLONING --------------
         //clone roads
         ArrayList<Road> roadsCopy = new ArrayList<>();
@@ -289,7 +291,6 @@ public class RoutingType {
         for (Road copy : roadsCopy) {
             copy.setStartNode(nodesToCopyMap.get(copy.getStartNode()));
             copy.setEndNode(nodesToCopyMap.get(copy.getEndNode()));
-
         }
 
         //-------------- CALCULATING TIME TAKEN --------------
@@ -307,12 +308,16 @@ public class RoutingType {
         for (Road road : path) {
             pathCopy.push(roadsToCopyMap.get(road));
         }
+
         breakpoint:
         //loop through vehicle path until reached endNode
         while (currentNode != endNodeCopy) {
 
             //determine number of timesteps to get to next node
             Road currentRoadCopy = pathCopy.pop();
+            if (currentRoadCopy.getDensity() >= 1.0) {
+                return Double.MAX_VALUE;
+            }
             v.setCurrentRoad(currentRoadCopy);
             v.setCurrentSpeed(currentRoadCopy.calculateCurrentSpeed());
             int nTimeSteps = v.calculateTimeIncrementsToFinishRoad();
@@ -343,7 +348,7 @@ public class RoutingType {
             for (int i = 0; i < nTimeSteps; i++) {
                 for (Vehicle vehicle : activeVehiclesCopy) {
                     vehicle.move();
-                }
+                }x  
             }
         }
         return totalCost;

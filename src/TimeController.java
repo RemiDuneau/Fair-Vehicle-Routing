@@ -18,6 +18,7 @@ public class TimeController {
     private ArrayList<Node> nodes = new ArrayList<>();
     private ArrayList<Road> roads = new ArrayList<>();
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
+    private int vehiclesSentOut = 0;
 
 
     public void incrementTime() {
@@ -60,12 +61,12 @@ public class TimeController {
                         break;
 
                     case RoutingType.TYPE_FUTURE_DIJKSTRA:
-                        Stack<Road> pathFutureTime = RoutingType.future(vehicle.getStartNode(),vehicle.getEndNode(),nodes,roads,activeVehicles, allPathsMap, false);
+                        Stack<Road> pathFutureTime = RoutingType.future(vehicle.getStartNode(), vehicle.getEndNode(), nodes, roads, activeVehicles, allPathsMap, false);
                         vehicle.setPath(pathFutureTime);
                         break;
 
                     case RoutingType.TYPE_FUTURE_LEAST_DENSITY:
-                        Stack<Road> pathFutureDensity = RoutingType.future(vehicle.getStartNode(),vehicle.getEndNode(),nodes,roads,activeVehicles, allPathsMap, true);
+                        Stack<Road> pathFutureDensity = RoutingType.future(vehicle.getStartNode(), vehicle.getEndNode(), nodes, roads, activeVehicles, allPathsMap, true);
                         vehicle.setPath(pathFutureDensity);
                         break;
 
@@ -74,22 +75,27 @@ public class TimeController {
                 }
 
                 //check if density < 1
-                Road road = vehicle.getPath().peek();
-                if (road.getDensity() < 1) {
+                if (vehicle.getPath().size() > 0) {
+                    Road road = vehicle.getPath().peek();
+                    if (road.getDensity() < 1) {
 
-                    //set other state variables and add to activeVehicles
-                    activeVehicles.add(vehicle);
-                    road = vehicle.getPath().pop();
-                    vehicle.setCurrentRoad(road);
-                    road.addVehicle(vehicle);
-                    vehicle.setCurrentSpeed(road.calculateCurrentSpeed());
-                    vehiclesToRemove.add(vehicle);
+                        //set other state variables and add to activeVehicles
+                        activeVehicles.add(vehicle);
+                        vehiclesSentOut++;
 
-                    //increment nodes
-                    Node node = vehicle.getStartNode();
-                    if (assignedNodes.containsKey(node)) {
-                        assignedNodes.put(node, assignedNodes.get(node) + 1);
-                    } else assignedNodes.put(node, 1);
+                        //init vehicle/ update road
+                        road = vehicle.getPath().pop();
+                        vehicle.setCurrentRoad(road);
+                        road.addVehicle(vehicle);
+                        vehicle.setCurrentSpeed(road.calculateCurrentSpeed());
+                        vehiclesToRemove.add(vehicle);
+
+                        //increment nodes
+                        Node node = vehicle.getStartNode();
+                        if (assignedNodes.containsKey(node)) {
+                            assignedNodes.put(node, assignedNodes.get(node) + 1);
+                        } else assignedNodes.put(node, 1);
+                    }
                 }
             }
         }
@@ -225,5 +231,9 @@ public class TimeController {
 
     public Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> getAllPathsMap() {
         return allPathsMap;
+    }
+
+    public int getVehiclesSentOut() {
+        return vehiclesSentOut;
     }
 }

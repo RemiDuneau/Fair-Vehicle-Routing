@@ -1,5 +1,4 @@
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,7 +8,7 @@ import java.util.Stack;
 public class SimLoop {
     //TODO: change least density to be average!!! not cumulative...
     public static void main(String[] args) {
-        int routingType = RoutingType.TYPE_FUTURE_LEAST_DENSITY;
+        int routingType = RoutingType.TYPE_LEAST_DENSITY;
         int initial = 500;
         int numCycles = 10;
         int vehiclesIncrement = 500;
@@ -97,13 +96,15 @@ public class SimLoop {
             double totalAverageDensity = averageDensitySum / roads.size();
             System.out.println("Total average density = " + totalAverageDensity);
 
-            //write/append to file
+            System.out.println("Vehicles sent out: " + controller.getVehiclesSentOut());
 
+
+            //write/append to file
             try {
                 FileWriter fileWriter = new FileWriter("test.csv", true);
                 BufferedWriter writer = new BufferedWriter(fileWriter);
-                writer.write(TimeController.NUM_VEHICLES + ", " + routingType + ", " + totalTripsFinished + ", "
-                        + tripsCompletedStdDev + ", " + totalAverageDensity + "\n");
+                writer.write(TimeController.NUM_VEHICLES + ", " + routingType + ", " + avgTripsFinished + ", "
+                        + tripsCompletedStdDev + ", " + totalAverageDensity + ", " + controller.getVehiclesSentOut() + "\n");
                 writer.flush();
             } catch (IOException e) {
                 e.printStackTrace();
