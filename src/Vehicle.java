@@ -2,11 +2,14 @@ import java.util.Stack;
 
 public class Vehicle implements Cloneable {
 
+    public static double VEHICLE_LENGTH = 5;
+
     public Vehicle(int routingType) {
         this.routingType = routingType;
     }
 
-    public static double VEHICLE_LENGTH = 5;
+    public Vehicle () {}
+
 
     private int routingType;
 
@@ -37,31 +40,33 @@ public class Vehicle implements Cloneable {
     public void move() {
         int oldRoadLength = currentRoad.getLength();
 
+        //check if finished
+
         //check if move onto new road
         int difference = oldRoadLength - (roadDistance + currentSpeed);
         if (difference < 0) { //move to new road
-            difference = -difference; //turn number positive
-            double proportionOfTimeLeft =  (double) difference / (double) currentSpeed;
-            incrementDistances(oldRoadLength-roadDistance); //distance travelled on old road
-            currentRoad.removeVehicle(this);
-
-            //check if finished
             if (path.isEmpty()) {
                 isFinished = true;
                 tripsFinished += 1;
             }
+            if (path.isEmpty() || path.peek().getDensity() < 1.0) { //check if new road isn't full
+                difference = -difference; //turn number positive
+                double proportionOfTimeLeft = (double) difference / (double) currentSpeed;
+                incrementDistances(oldRoadLength - roadDistance); //distance travelled on old road
+                currentRoad.removeVehicle(this);
 
-            else {
-                //remove from old road, add to new road
-                Road newRoad = path.pop();
-                newRoad.addVehicle(this);
+                if (!isFinished) {
+                    //remove from old road, add to new road
+                    Road newRoad = path.pop();
+                    newRoad.addVehicle(this);
 
-                //update vars and finish trip for time increment
-                currentSpeed = newRoad.calculateCurrentSpeed();
-                int distanceOnNewRoad = (int) (currentSpeed * proportionOfTimeLeft);
-                resetRoadDistance();
-                incrementDistances(distanceOnNewRoad);
-                currentRoad = newRoad;
+                    //update vars and finish trip for time increment
+                    currentSpeed = newRoad.calculateCurrentSpeed();
+                    int distanceOnNewRoad = (int) (currentSpeed * proportionOfTimeLeft);
+                    resetRoadDistance();
+                    incrementDistances(distanceOnNewRoad);
+                    currentRoad = newRoad;
+                }
             }
         }
 

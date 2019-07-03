@@ -2,27 +2,29 @@ import java.util.*;
 
 public class TimeController {
     public static int NUM_VEHICLES = 2500;
-    public static int NUM_ITERATIONS = 400;
     public static final int SEED = 1234567890;
     public static final Random RANDOM = new Random();
     public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES/200, 1);
 
-    public TimeController() {
+    public TimeController(int numVehicles, Graph graph) {
         RANDOM.setSeed(SEED);
+        NUM_VEHICLES = numVehicles;
+        this.nodes = graph.getNodes();
+        this.roads = graph.getRoads();
     }
 
 
     private Vehicle[] vehicles = new Vehicle[NUM_VEHICLES];
     private ArrayList<Vehicle> inactiveVehicles = new ArrayList(NUM_VEHICLES);
     private ArrayList<Vehicle> activeVehicles = new ArrayList<>();
-    private ArrayList<Node> nodes = new ArrayList<>();
-    private ArrayList<Road> roads = new ArrayList<>();
+    private ArrayList<Node> nodes;
+    private ArrayList<Road> roads;
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
     private int vehiclesSentOut = 0;
 
 
     public void incrementTime() {
-        addVehicle();
+        addVehicles();
         moveVehicles();
         removeVehicles();
         updateSpeed();
@@ -32,7 +34,7 @@ public class TimeController {
      * Attempts to add a vehicle to the graph at its start node. For every node, at most one vehicle is added.
      * Sets the current speed to the maximum speed of the road
      */
-    private void addVehicle() {
+    private void addVehicles() {
         HashMap<Node, Integer> assignedNodes = new HashMap<>();
         ArrayList<Vehicle> vehiclesToRemove = new ArrayList<>();
         for (Vehicle vehicle : inactiveVehicles) {
@@ -43,30 +45,30 @@ public class TimeController {
                 //set path
                 switch (vehicle.getRoutingType()) {
 
-                    case RoutingType.TYPE_DIJKSTRA:
-                        Stack<Road> pathDijkstra = RoutingType.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes);
+                    case Routing.TYPE_DIJKSTRA:
+                        Stack<Road> pathDijkstra = Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes);
                         vehicle.setPath(pathDijkstra);
                         break;
 
-                    case RoutingType.TYPE_FAIR:
+                    case Routing.TYPE_FAIR:
                         Stack<Road> pathFair = new Stack<>();
                         pathFair.push(roads.get(3));
                         pathFair.push(roads.get(1));
                         vehicle.setPath(pathFair);
                         break;
 
-                    case RoutingType.TYPE_LEAST_DENSITY:
-                        Stack<Road> pathLeastDensity = RoutingType.leastDensity(vehicle.getStartNode(), vehicle.getEndNode(), nodes);
+                    case Routing.TYPE_LEAST_DENSITY:
+                        Stack<Road> pathLeastDensity = Routing.leastDensity(vehicle.getStartNode(), vehicle.getEndNode(), nodes);
                         vehicle.setPath(pathLeastDensity);
                         break;
 
-                    case RoutingType.TYPE_FUTURE_DIJKSTRA:
-                        Stack<Road> pathFutureTime = RoutingType.future(vehicle.getStartNode(), vehicle.getEndNode(), nodes, roads, activeVehicles, allPathsMap, false);
+                    case Routing.TYPE_FUTURE_DIJKSTRA:
+                        Stack<Road> pathFutureTime = Routing.future(vehicle.getStartNode(), vehicle.getEndNode(), nodes, roads, activeVehicles, allPathsMap, false);
                         vehicle.setPath(pathFutureTime);
                         break;
 
-                    case RoutingType.TYPE_FUTURE_LEAST_DENSITY:
-                        Stack<Road> pathFutureDensity = RoutingType.future(vehicle.getStartNode(), vehicle.getEndNode(), nodes, roads, activeVehicles, allPathsMap, true);
+                    case Routing.TYPE_FUTURE_LEAST_DENSITY:
+                        Stack<Road> pathFutureDensity = Routing.future(vehicle.getStartNode(), vehicle.getEndNode(), nodes, roads, activeVehicles, allPathsMap, true);
                         vehicle.setPath(pathFutureDensity);
                         break;
 
@@ -77,7 +79,7 @@ public class TimeController {
                 //check if density < 1
                 if (vehicle.getPath().size() > 0) {
                     Road road = vehicle.getPath().peek();
-                    if (road.getDensity() < 1) {
+                    if (road.getDensity() < 1.0) {
 
                         //set other state variables and add to activeVehicles
                         activeVehicles.add(vehicle);
@@ -139,9 +141,41 @@ public class TimeController {
 
     public void createVehicles() {
         for (int i = 0; i < NUM_VEHICLES; i++) {
-            Vehicle vehicle = new Vehicle(RoutingType.TYPE_FUTURE_LEAST_DENSITY);
+            Vehicle vehicle = new Vehicle(Routing.TYPE_FUTURE_LEAST_DENSITY);
             vehicles[i] = vehicle;
             inactiveVehicles.add(vehicle);
+        }
+
+        //update 3/4 of vehicles to start at node0, and 1/4 to start at node4
+        int j = 0;
+        for (int i = 0; i < 0.75*NUM_VEHICLES; i++){
+            vehicles[i].setStartNode(nodes.get(0));
+            vehicles[i].setEndNode(nodes.get(3));
+            j++;
+        }
+        for (int i = j; i < NUM_VEHICLES; i++){
+            vehicles[i].setStartNode(nodes.get(4));
+            vehicles[i].setEndNode(nodes.get(3));
+        }
+    }
+
+    public void createRandomNodeVehicles() {
+        for (int i = 0; i < NUM_VEHICLES; i++) {
+            Vehicle vehicle = new Vehicle();
+            vehicles[i] = vehicle;
+            inactiveVehicles.add(vehicle);
+
+            //randomise start and end nodes
+            int startNodeId = RANDOM.nextInt(nodes.size());
+            int endNodeId = RANDOM.nextInt(nodes.size());
+            Node startNode = null;
+            Node endNode = null;
+            for (Node node : nodes) {
+                if (node.getId() == startNodeId) startNode = node;
+                if (node.getId() == endNodeId) endNode = node;
+            }
+            vehicle.setStartNode(startNode);
+            vehicle.setEndNode(endNode);
         }
     }
 
@@ -197,17 +231,7 @@ public class TimeController {
         nodes.add(node3);
         nodes.add(node4);
 
-        //update 3/4 of vehicles to start at node0, and 1/4 to start at node4
-        int j = 0;
-        for (int i = 0; i < 0.75*NUM_VEHICLES; i++){
-            vehicles[i].setStartNode(node0);
-            vehicles[i].setEndNode(node3);
-            j++;
-        }
-        for (int i = j; i < NUM_VEHICLES; i++){
-            vehicles[i].setStartNode(node4);
-            vehicles[i].setEndNode(node3);
-        }
+
     }
 
     //----------- ACCESSOR METHODS

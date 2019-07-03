@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ public class Node implements Cloneable {
 
     private int id;
     private Map<Node, Road> neighbours = new HashMap();
+    private ArrayList<Node> reachableNodes = new ArrayList<>();
 
 
     public Object clone() {
@@ -42,4 +44,7 @@ public class Node implements Cloneable {
         this.neighbours = neighbours;
     }
 
+    public ArrayList<Node> getReachableNodes() {
+        return reachableNodes;
+    }
 }

@@ -1,7 +1,7 @@
 
 import java.util.*;
 
-public class RoutingType {
+public class Routing {
 
     public static final int TYPE_DIJKSTRA = 0;
     public static final int TYPE_FAIR = 1;
@@ -134,14 +134,15 @@ public class RoutingType {
     }
 
     /**
-     * finds all the paths to get from the specified start node to the specified end node
+     * Finds all the acyclic paths to get from the specified start node to the specified end node
      * @param startNode the starting node
      * @param endNode the destination node
-     * @return a list of paths ({@code Stack<Road>}) to get from the start node to the end node
+     * @return a list of acyclic paths ({@code Stack<Road>}) to get from the start node to the end node
      */
     public static ArrayList<Stack<Road>> dfsFindAllPaths(Node startNode, Node endNode) {
         ArrayList<ArrayList<Node>> nodePaths = new ArrayList<>();
         Stack<ArrayList<Node>> searchStack = new Stack<>();
+        ArrayList<Node> visited = new ArrayList<>();
         ArrayList<Node> start = new ArrayList<>();
         start.add(startNode);
         searchStack.add(start);
@@ -153,9 +154,10 @@ public class RoutingType {
             else {
                 for (Node node : path.get(path.size()-1).getNeighbours().keySet()) {
                     ArrayList<Node> child = (ArrayList<Node>) path.clone();
-                    child.add(node);
-                    if (!searchStack.contains(child))
+                    if (!child.contains(node)) {
+                        child.add(node);
                         searchStack.push(child);
+                    }
                 }
             }
         }
@@ -348,7 +350,7 @@ public class RoutingType {
             for (int i = 0; i < nTimeSteps; i++) {
                 for (Vehicle vehicle : activeVehiclesCopy) {
                     vehicle.move();
-                }x  
+                }
             }
         }
         return totalCost;

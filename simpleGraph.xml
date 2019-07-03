@@ -1,0 +1,63 @@
+<graph>
+	<node>
+		<id>0</id>
+	</node>
+	
+	<node>
+		<id>1</id>
+	</node>
+	
+	<node>
+		<id>2</id>
+	</node>  
+			 
+	<node>   
+		<id>3</id>
+	</node>  
+			 
+	<node>   
+		<id>4</id>
+	</node>
+	
+	<road>
+		<startnode>0</startnode>
+		<endnode>1</endnode>
+		<length>4000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>0</startnode>
+		<endnode>2</endnode>
+		<length>3000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>0</startnode>
+		<endnode>3</endnode>
+		<length>3000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>1</startnode>
+		<endnode>3</endnode>
+		<length>4000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>2</startnode>
+		<endnode>3</endnode>
+		<length>4000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>4</startnode>
+		<endnode>2</endnode>
+		<length>2000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+</graph>
