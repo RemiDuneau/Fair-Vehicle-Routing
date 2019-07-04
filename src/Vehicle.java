@@ -17,7 +17,8 @@ public class Vehicle implements Cloneable {
     private Node startNode, endNode;
     private Stack<Road> path;
     private Road currentRoad;
-    private int totalDistance, tripDistance, roadDistance, currentSpeed, unfairnessScore, tripsFinished = 0;
+    private int totalDistance, tripDistance, roadDistance, currentSpeed, unfairnessScore, tripsFinished = 0,
+            optimalTripTime, actualTripTime = 0;
     private boolean isFinished;
 
     @Override
@@ -38,9 +39,8 @@ public class Vehicle implements Cloneable {
     //-------------- movement methods --------------
 
     public void move() {
+        actualTripTime++;
         int oldRoadLength = currentRoad.getLength();
-
-        //check if finished
 
         //check if move onto new road
         int difference = oldRoadLength - (roadDistance + currentSpeed);
@@ -49,7 +49,7 @@ public class Vehicle implements Cloneable {
                 isFinished = true;
                 tripsFinished += 1;
             }
-            if (path.isEmpty() || path.peek().getDensity() < 1.0) { //check if new road isn't full
+            if (path.isEmpty() || path.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
                 difference = -difference; //turn number positive
                 double proportionOfTimeLeft = (double) difference / (double) currentSpeed;
                 incrementDistances(oldRoadLength - roadDistance); //distance travelled on old road
@@ -73,6 +73,16 @@ public class Vehicle implements Cloneable {
         else {
             incrementDistances(currentSpeed);
         }
+    }
+
+    /**
+     * Calculates the percentage difference between the time taken if the vehicle had taken the optimal route with no congestion
+     * compared to the time the vehicle took to actually complete the stuff.
+     * E.g. a value of 20.0 would mean the actual time taken was 20% more than the optimal 0 congestion time.
+     * @return The % difference between the optimal time taken and the actual time taken
+     */
+    public double calculateOptimalTimeDifference() {
+        return ( (double) (actualTripTime - optimalTripTime) / (double) optimalTripTime ) * 100;
     }
 
     public int calculateTimeIncrementsToFinishRoad() {
@@ -168,5 +178,17 @@ public class Vehicle implements Cloneable {
 
     public int getTripsFinished() {
         return tripsFinished;
+    }
+
+    public int getOptimalTripTime() {
+        return optimalTripTime;
+    }
+
+    public void setOptimalTripTime(int time) {
+        optimalTripTime = time;
+    }
+
+    public int getActualTripTime() {
+        return actualTripTime;
     }
 }

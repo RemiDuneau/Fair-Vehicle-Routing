@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Road implements Cloneable {
+    public static final double MAX_DENSITY  = 1.0;
 
     public Road(Node startNode, Node endNode, int length, int maxSpeed) {
         this.startNode = startNode;
@@ -15,7 +16,7 @@ public class Road implements Cloneable {
     private int length, maxSpeed, currentSpeed, timeToTraverse, totalVehiclesAdded = 0;
 
     //state variables
-    private double density, maxDensity = 1.0, densitySum = 0; //proportion of occupied cells
+    private double density, densitySum = 0; //proportion of occupied cells
 
     /**
      * Clones the instance of this Road (creates a shallow copy)
@@ -55,13 +56,17 @@ public class Road implements Cloneable {
      */
     public void incrementDensitySum() {
         calculateDensity();
-        densitySum += density;
+        if (SimLoop.isPopulated) densitySum += density;
     }
 
 
     private int greenbergSpeedEquation() {
         if (vehicles.size() == 0) return maxSpeed; //return max speed if road is empty
-        return Math.min( maxSpeed, (int) (maxSpeed * Math.log(maxDensity/density)) );
+        return Math.min( maxSpeed, (int) (maxSpeed * Math.log(MAX_DENSITY/density)) );
+    }
+
+    public int getTimeToTraverseNoCongestion() {
+        return (int) Math.ceil((double) length / (double) maxSpeed);
     }
 
     public int getMaxSpeed() {
@@ -109,8 +114,8 @@ public class Road implements Cloneable {
     }
 
     public void addVehicle(Vehicle vehicle) {
-        vehicles.add(vehicle);
-        totalVehiclesAdded++;
+            vehicles.add(vehicle);
+            if (SimLoop.isPopulated) totalVehiclesAdded++;
     }
 
     public void removeVehicle(Vehicle vehicle) {

@@ -17,10 +17,12 @@ public class TimeController {
     private Vehicle[] vehicles = new Vehicle[NUM_VEHICLES];
     private ArrayList<Vehicle> inactiveVehicles = new ArrayList(NUM_VEHICLES);
     private ArrayList<Vehicle> activeVehicles = new ArrayList<>();
+    private ArrayList<Vehicle> trackedVehicles = new ArrayList<>();
     private ArrayList<Node> nodes;
     private ArrayList<Road> roads;
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
     private int vehiclesSentOut = 0;
+
 
 
     public void incrementTime() {
@@ -79,12 +81,15 @@ public class TimeController {
                 //check if density < 1
                 if (vehicle.getPath().size() > 0) {
                     Road road = vehicle.getPath().peek();
-                    if (road.getDensity() < 1.0) {
+                    if (road.getDensity() < Road.MAX_DENSITY) {
 
                         //set other state variables and add to activeVehicles
                         activeVehicles.add(vehicle);
-                        vehiclesSentOut++;
-
+                        if (SimLoop.isPopulated) {
+                            trackedVehicles.add(vehicle);
+                            vehicle.setOptimalTripTime(Routing.dijkstraNoCongestionTimeTaken(vehicle.getStartNode(), vehicle.getEndNode(), nodes));
+                            vehiclesSentOut++;
+                        }
                         //init vehicle/ update road
                         road = vehicle.getPath().pop();
                         vehicle.setCurrentRoad(road);
@@ -116,9 +121,7 @@ public class TimeController {
         ArrayList<Vehicle> vehiclesToRemove = new ArrayList<>();
         for (Vehicle vehicle : activeVehicles) {
             if (vehicle.isFinished()) {
-                vehicle.setFinished(false);
                 vehiclesToRemove.add(vehicle);
-                inactiveVehicles.add(vehicle);
                 vehicle.getCurrentRoad().removeVehicle(vehicle);
                 vehicle.resetRoadDistance();
                 vehicle.resetTripDistance();
@@ -247,6 +250,10 @@ public class TimeController {
 
     public ArrayList<Vehicle> getActiveVehicles() {
         return activeVehicles;
+    }
+
+    public ArrayList<Vehicle> getTrackedVehicles() {
+        return trackedVehicles;
     }
 
     public ArrayList<Road> getRoads() {

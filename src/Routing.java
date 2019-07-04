@@ -14,7 +14,7 @@ public class Routing {
      * (i.e. the least time to get to end node).
      * @param startNode the start node
      * @param endNode the end node
-     * @param nodes a list of all nodes inthe graph
+     * @param nodes a list of all nodes in the graph
      * @return a path ({@code Stack<Road>}) of the optimal route.
      */
     public static Stack<Road> dijkstra(Node startNode, Node endNode, List<Node> nodes) {
@@ -53,7 +53,7 @@ public class Routing {
             for (Node neighbour : currentNode.getNeighbours().keySet()) {
                 if (unvisited.contains(neighbour)) {
                     Road road = currentNode.getRoad(neighbour);
-                    int time = (road.getDensity() >= 1.0) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse();
+                    int time = (road.getDensity() >= Road.MAX_DENSITY) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse();
                     if (time < timesMap.get(neighbour)) {
                         timesMap.put(neighbour, time);
                         previousNodeMap.put(neighbour, currentNode);
@@ -107,7 +107,7 @@ public class Routing {
             for (Node neighbour : currentNode.getNeighbours().keySet()) {
                 if (unvisited.contains(neighbour)) {
                     Road road = currentNode.getRoad(neighbour);
-                    double density = (road.getDensity() >= 1.0) ? Double.MAX_VALUE-10 : densitiesMap.get(currentNode) + road.calculateDensity();
+                    double density = (road.getDensity() >= Road.MAX_DENSITY) ? Double.MAX_VALUE-10 : densitiesMap.get(currentNode) + road.calculateDensity();
                     if (density < densitiesMap.get(neighbour)) {
                         densitiesMap.put(neighbour, density);
                         previousNodeMap.put(neighbour, currentNode);
@@ -184,6 +184,62 @@ public class Routing {
             paths.add(path);
         }
         return paths;
+    }
+
+    public static int dijkstraNoCongestionTimeTaken (Node startNode, Node endNode, ArrayList<Node> nodes) {
+        //initialisation
+        ArrayList<Node> unvisited = new ArrayList<>(nodes);
+        Map<Node, Integer> timesMap = new HashMap<>();
+        Map<Node, Node> previousNodeMap = new HashMap<>();
+
+        for (Node node : nodes) {
+            timesMap.put(node, Integer.MAX_VALUE);
+            previousNodeMap.put(node, null);
+        }
+        timesMap.put(startNode, 0); //set start node to 0
+
+        while (unvisited.size() > 0) {
+
+            //find closest node
+            int minTime = Integer.MAX_VALUE;
+            Node currentNode = null;
+            for (Node node : timesMap.keySet()) {
+                int time = timesMap.get(node);
+                if (time < minTime) {
+                    minTime = time;
+                    currentNode = node;
+                }
+            }
+
+            //return road path if currentNode is endNode
+            if (currentNode == endNode) {
+                int total = 0;
+                while (previousNodeMap.get(currentNode) != null) {
+                    Node previousNode = previousNodeMap.get(currentNode);
+                    Road road = previousNode.getRoad(currentNode);
+                    total += road.getTimeToTraverseNoCongestion();
+                    currentNode = previousNode;
+                }
+                return total;
+            }
+
+            if (currentNode == null) return 0;
+
+            //visit neighbours and add to known nodes
+            for (Node neighbour : currentNode.getNeighbours().keySet()) {
+                if (unvisited.contains(neighbour)) {
+                    Road road = currentNode.getRoad(neighbour);
+                    int time = timesMap.get(currentNode) + road.getTimeToTraverseNoCongestion();
+                    if (time < timesMap.get(neighbour)) {
+                        timesMap.put(neighbour, time);
+                        previousNodeMap.put(neighbour, currentNode);
+                    }
+                }
+            }
+            unvisited.remove(currentNode);
+            timesMap.remove(currentNode);
+        }
+        return 0;
     }
 
     /**
@@ -317,7 +373,7 @@ public class Routing {
 
             //determine number of timesteps to get to next node
             Road currentRoadCopy = pathCopy.pop();
-            if (currentRoadCopy.getDensity() >= 1.0) {
+            if (currentRoadCopy.getDensity() >= Road.MAX_DENSITY) {
                 return Double.MAX_VALUE;
             }
             v.setCurrentRoad(currentRoadCopy);

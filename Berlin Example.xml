@@ -1,0 +1,807 @@
+<graph>
+	<node>
+		<id>0</id>
+	</node>
+	
+	<node>
+		<id>1</id>
+	</node>
+	
+	<node>
+		<id>2</id>
+	</node>  
+			 
+	<node>   
+		<id>3</id>
+	</node>  
+			 
+	<node>   
+		<id>4</id>
+	</node>
+	
+	<node>   
+		<id>5</id>
+	</node>
+	
+	<node>   
+		<id>6</id>
+	</node>
+	
+	<node>   
+		<id>7</id>
+	</node>
+	
+	<node>   
+		<id>8</id>
+	</node>
+	
+	<node>   
+		<id>9</id>
+	</node>
+	
+	<node>   
+		<id>10</id>
+	</node>
+	
+	<node>   
+		<id>11</id>
+	</node>
+	
+	<node>   
+		<id>12</id>
+	</node>
+	
+	<node>   
+		<id>13</id>
+	</node>
+	
+	<node>   
+		<id>14</id>
+	</node>
+	
+	<node>   
+		<id>15</id>
+	</node>
+	
+	<node>   
+		<id>16</id>
+	</node>
+	
+	<node>   
+		<id>17</id>
+	</node>
+	
+	<node>   
+		<id>18</id>
+	</node>
+	
+	<node>   
+		<id>19</id>
+	</node>
+	
+	<node>   
+		<id>20</id>
+	</node>
+	
+	<node>   
+		<id>21</id>
+	</node>
+	
+	<node>   
+		<id>22</id>
+	</node>
+	
+	<node>   
+		<id>23</id>
+	</node>
+	
+	<node>   
+		<id>24</id>
+	</node>
+	
+	<node>   
+		<id>25</id>
+	</node>
+	
+	<node>   
+		<id>26</id>
+	</node>
+	
+	<node>   
+		<id>27</id>
+	</node>
+	
+	<node>   
+		<id>28</id>
+	</node>
+	
+	<node>   
+		<id>29</id>
+	</node>
+	
+	<node>   
+		<id>30</id>
+	</node>
+	
+	<node>   
+		<id>31</id>
+	</node>
+	
+	<node>   
+		<id>32</id>
+	</node>
+	
+	<node>   
+		<id>33</id>
+	</node>
+	
+	<node>   
+		<id>34</id>
+	</node>
+	
+	<road>
+		<startnode>0</startnode>
+		<endnode>1</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>1</startnode>
+		<endnode>0</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>1</startnode>
+		<endnode>2</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>2</startnode>
+		<endnode>1</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>1</startnode>
+		<endnode>5</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>5</startnode>
+		<endnode>1</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>2</startnode>
+		<endnode>3</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>3</startnode>
+		<endnode>2</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>2</startnode>
+		<endnode>6</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>6</startnode>
+		<endnode>2</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>3</startnode>
+		<endnode>7</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>7</startnode>
+		<endnode>3</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>3</startnode>
+		<endnode>9</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>9</startnode>
+		<endnode>3</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>4</startnode>
+		<endnode>5</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>5</startnode>
+		<endnode>4</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>5</startnode>
+		<endnode>6</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>6</startnode>
+		<endnode>5</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>5</startnode>
+		<endnode>15</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>15</startnode>
+		<endnode>5</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>6</startnode>
+		<endnode>9</endnode>
+		<length>150</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>9</startnode>
+		<endnode>6</endnode>
+		<length>150</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>6</startnode>
+		<endnode>10</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>10</startnode>
+		<endnode>6</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>7</startnode>
+		<endnode>8</endnode>
+		<length>800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>8</startnode>
+		<endnode>7</endnode>
+		<length>800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>7</startnode>
+		<endnode>11</endnode>
+		<length>800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>11</startnode>
+		<endnode>7</endnode>
+		<length>800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>9</startnode>
+		<endnode>10</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>10</startnode>
+		<endnode>9</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>9</startnode>
+		<endnode>12</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>12</startnode>
+		<endnode>9</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>10</startnode>
+		<endnode>16</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>16</startnode>
+		<endnode>10</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>11</startnode>
+		<endnode>12</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>12</startnode>
+		<endnode>11</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>11</startnode>
+		<endnode>13</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>13</startnode>
+		<endnode>11</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>12</startnode>
+		<endnode>13</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>13</startnode>
+		<endnode>12</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>12</startnode>
+		<endnode>19</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>19</startnode>
+		<endnode>12</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>13</startnode>
+		<endnode>19</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>19</startnode>
+		<endnode>13</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>14</startnode>
+		<endnode>15</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>15</startnode>
+		<endnode>14</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>15</startnode>
+		<endnode>16</endnode>
+		<length>1500</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>16</startnode>
+		<endnode>15</endnode>
+		<length>1500</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>15</startnode>
+		<endnode>18</endnode>
+		<length>500</length>
+		<maxspeed>70</maxspeed>
+	</road>
+		<road>
+		<startnode>18</startnode>
+		<endnode>15</endnode>
+		<length>500</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>16</startnode>
+		<endnode>19</endnode>
+		<length>300</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>19</startnode>
+		<endnode>16</endnode>
+		<length>300</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>16</startnode>
+		<endnode>20</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>20</startnode>
+		<endnode>16</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>17</startnode>
+		<endnode>18</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>18</startnode>
+		<endnode>17</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>18</startnode>
+		<endnode>20</endnode>
+		<length>1800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>20</startnode>
+		<endnode>18</endnode>
+		<length>1800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>19</startnode>
+		<endnode>21</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>21</startnode>
+		<endnode>19</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>19</startnode>
+		<endnode>22</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>22</startnode>
+		<endnode>19</endnode>
+		<length>600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>20</startnode>
+		<endnode>21</endnode>
+		<length>500</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>21</startnode>
+		<endnode>20</endnode>
+		<length>500</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>20</startnode>
+		<endnode>26</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>26</startnode>
+		<endnode>20</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>21</startnode>
+		<endnode>27</endnode>
+		<length>200</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>27</startnode>
+		<endnode>21</endnode>
+		<length>200</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>21</startnode>
+		<endnode>28</endnode>
+		<length>300</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>28</startnode>
+		<endnode>21</endnode>
+		<length>300</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>22</startnode>
+		<endnode>24</endnode>
+		<length>300</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>24</startnode>
+		<endnode>22</endnode>
+		<length>300</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>22</startnode>
+		<endnode>28</endnode>
+		<length>150</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>28</startnode>
+		<endnode>22</endnode>
+		<length>150</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>23</startnode>
+		<endnode>24</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>24</startnode>
+		<endnode>23</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>24</startnode>
+		<endnode>29</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>29</startnode>
+		<endnode>24</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>24</startnode>
+		<endnode>32</endnode>
+		<length>800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>32</startnode>
+		<endnode>24</endnode>
+		<length>800</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>25</startnode>
+		<endnode>26</endnode>
+		<length>1600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>26</startnode>
+		<endnode>25</endnode>
+		<length>1600</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>26</startnode>
+		<endnode>27</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>27</startnode>
+		<endnode>26</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>26</startnode>
+		<endnode>31</endnode>
+		<length>200</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>31</startnode>
+		<endnode>26</endnode>
+		<length>200</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>27</startnode>
+		<endnode>28</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>28</startnode>
+		<endnode>27</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>28</startnode>
+		<endnode>29</endnode>
+		<length>80</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>29</startnode>
+		<endnode>28</endnode>
+		<length>80</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>29</startnode>
+		<endnode>30</endnode>
+		<length>80</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>30</startnode>
+		<endnode>29</endnode>
+		<length>80</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	
+	<road>
+		<startnode>30</startnode>
+		<endnode>31</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>31</startnode>
+		<endnode>30</endnode>
+		<length>1000</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>30</startnode>
+		<endnode>34</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>34</startnode>
+		<endnode>30</endnode>
+		<length>400</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+	<road>
+		<startnode>31</startnode>
+		<endnode>33</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	<road>
+		<startnode>33</startnode>
+		<endnode>31</endnode>
+		<length>100</length>
+		<maxspeed>70</maxspeed>
+	</road>
+	
+</graph>
