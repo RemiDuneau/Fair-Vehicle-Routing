@@ -1,7 +1,6 @@
 import java.util.ArrayList;
-import java.util.Iterator;
 
-public class Road implements Cloneable {
+public class Road {
     public static final double MAX_DENSITY  = 1.0;
 
     public Road(Node startNode, Node endNode, int length, int maxSpeed) {
@@ -9,6 +8,7 @@ public class Road implements Cloneable {
         this.endNode = endNode;
         this.length = length;
         this.maxSpeed = maxSpeed;
+        currentSpeed = maxSpeed;
     }
 
     private ArrayList<Vehicle> vehicles = new ArrayList<>();
@@ -17,23 +17,6 @@ public class Road implements Cloneable {
 
     //state variables
     private double density, densitySum = 0; //proportion of occupied cells
-
-    /**
-     * Clones the instance of this Road (creates a shallow copy)
-     * @return the clone of this Road
-     */
-    @Override
-    public Object clone() {
-        Road clone = null;
-
-        try {
-            clone = (Road) super.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return clone;
-    }
-
 
     public int calculateCurrentSpeed() {
         calculateDensity();
@@ -56,7 +39,7 @@ public class Road implements Cloneable {
      */
     public void incrementDensitySum() {
         calculateDensity();
-        if (SimLoop.isPopulated) densitySum += density;
+        if (SimLoop.isPopulated && !TimeController.isFutureSim) densitySum += density;
     }
 
 
@@ -114,8 +97,10 @@ public class Road implements Cloneable {
     }
 
     public void addVehicle(Vehicle vehicle) {
+        if (!vehicles.contains(vehicle)) {
             vehicles.add(vehicle);
-            if (SimLoop.isPopulated) totalVehiclesAdded++;
+            if (SimLoop.isPopulated && !TimeController.isFutureSim) totalVehiclesAdded++;
+        }
     }
 
     public void removeVehicle(Vehicle vehicle) {

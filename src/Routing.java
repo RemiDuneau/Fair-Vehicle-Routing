@@ -2,7 +2,7 @@
 import java.util.*;
 
 public class Routing {
-
+    public static final int TYPE_NULL = -1;
     public static final int TYPE_DIJKSTRA = 0;
     public static final int TYPE_FAIR = 1;
     public static final int TYPE_LEAST_DENSITY = 2;
@@ -15,9 +15,10 @@ public class Routing {
      * @param startNode the start node
      * @param endNode the end node
      * @param nodes a list of all nodes in the graph
+     * @param isConsideringCongestion true: current road density is taken into account when finding optimal path. false: assume road density is 0.0 when finding optimal path.
      * @return a path ({@code Stack<Road>}) of the optimal route.
      */
-    public static Stack<Road> dijkstra(Node startNode, Node endNode, List<Node> nodes) {
+    public static Stack<Road> dijkstra(Node startNode, Node endNode, List<Node> nodes, boolean isConsideringCongestion) {
         //initialisation
         ArrayList<Node> unvisited = new ArrayList<>(nodes);
         Map<Node, Integer> timesMap = new HashMap<>();
@@ -53,7 +54,13 @@ public class Routing {
             for (Node neighbour : currentNode.getNeighbours().keySet()) {
                 if (unvisited.contains(neighbour)) {
                     Road road = currentNode.getRoad(neighbour);
-                    int time = (road.getDensity() >= Road.MAX_DENSITY) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse();
+
+                    //determine what the time is based on whether road density is being considered (assume road is empty if not)
+                    int time;
+                    if (isConsideringCongestion)
+                        time = (road.getDensity() >= Road.MAX_DENSITY) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse();
+                    else time = timesMap.get(currentNode) + road.getTimeToTraverseNoCongestion();
+
                     if (time < timesMap.get(neighbour)) {
                         timesMap.put(neighbour, time);
                         previousNodeMap.put(neighbour, currentNode);
@@ -186,76 +193,17 @@ public class Routing {
         return paths;
     }
 
-    public static int dijkstraNoCongestionTimeTaken (Node startNode, Node endNode, ArrayList<Node> nodes) {
-        //initialisation
-        ArrayList<Node> unvisited = new ArrayList<>(nodes);
-        Map<Node, Integer> timesMap = new HashMap<>();
-        Map<Node, Node> previousNodeMap = new HashMap<>();
-
-        for (Node node : nodes) {
-            timesMap.put(node, Integer.MAX_VALUE);
-            previousNodeMap.put(node, null);
-        }
-        timesMap.put(startNode, 0); //set start node to 0
-
-        while (unvisited.size() > 0) {
-
-            //find closest node
-            int minTime = Integer.MAX_VALUE;
-            Node currentNode = null;
-            for (Node node : timesMap.keySet()) {
-                int time = timesMap.get(node);
-                if (time < minTime) {
-                    minTime = time;
-                    currentNode = node;
-                }
-            }
-
-            //return road path if currentNode is endNode
-            if (currentNode == endNode) {
-                int total = 0;
-                while (previousNodeMap.get(currentNode) != null) {
-                    Node previousNode = previousNodeMap.get(currentNode);
-                    Road road = previousNode.getRoad(currentNode);
-                    total += road.getTimeToTraverseNoCongestion();
-                    currentNode = previousNode;
-                }
-                return total;
-            }
-
-            if (currentNode == null) return 0;
-
-            //visit neighbours and add to known nodes
-            for (Node neighbour : currentNode.getNeighbours().keySet()) {
-                if (unvisited.contains(neighbour)) {
-                    Road road = currentNode.getRoad(neighbour);
-                    int time = timesMap.get(currentNode) + road.getTimeToTraverseNoCongestion();
-                    if (time < timesMap.get(neighbour)) {
-                        timesMap.put(neighbour, time);
-                        previousNodeMap.put(neighbour, currentNode);
-                    }
-                }
-            }
-            unvisited.remove(currentNode);
-            timesMap.remove(currentNode);
-        }
-        return 0;
-    }
-
     /**
      *
      * @param startNode
      * @param endNode
-     * @param nodes
-     * @param roads
      * @param activeVehicles
      * @param allPaths
      * @param isLeastDensity is true when measuring least density (i.e. {@code TYPE_FUTURE_LEAST_DENSITY}), and false otherwise
      * @return the least cost path (i.e. {@code Stack<Road>})
      */
-    public static Stack<Road> future(Node startNode, Node endNode, List<Node> nodes, List<Road> roads,
-                                     List<Vehicle> activeVehicles, Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPaths,
-                                     boolean isLeastDensity) {
+    public static Stack<Road> future(Node startNode, Node endNode, List<Vehicle> activeVehicles,
+                                     Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPaths, boolean isLeastDensity) {
 
         ArrayList<Stack<Road>> paths = new ArrayList<>();
 
@@ -279,7 +227,7 @@ public class Routing {
         Stack<Road> bestPath = new Stack<>();
         double best = Double.MAX_VALUE;
         for (Stack<Road> path : paths) {
-            double timeTaken = calculateFuture(startNode, endNode, nodes, roads, activeVehicles, path, isLeastDensity);
+            double timeTaken = calculateFuture(startNode, endNode, activeVehicles, path, isLeastDensity);
             if (timeTaken < best) {
                 best = timeTaken;
                 bestPath = path;
@@ -288,102 +236,48 @@ public class Routing {
         return bestPath;
     }
 
-    public static double calculateFuture(Node startNode, Node endNode, List<Node> nodes, List<Road> roads,
-                                      List<Vehicle> activeVehicles, Stack<Road> path, boolean isLeastDensity) {
-        //TODO: improve efficiency by only looping through the vehicles which have the current road in their path (will reduce accuracy because other cars not on that road may affect cars which will go on that road)
-        //-------------- CLONING --------------
-        //clone roads
-        ArrayList<Road> roadsCopy = new ArrayList<>();
-        Map<Road, Road> roadsToCopyMap = new HashMap<>();
-        Map<Road, Road> copyToRoadsMap = new HashMap<>();
 
-        for (Road road : roads) {
-            Road copy = (Road) road.clone();
-            copy.setVehicles(new ArrayList<>());
-            roadsCopy.add(copy);
-            roadsToCopyMap.put(road, copy);
-            copyToRoadsMap.put(copy, road);
-        }
-
-
-        //clone nodes
-        ArrayList<Node> nodesCopy = new ArrayList<>();
-        Map<Node, Node> nodesToCopyMap = new HashMap<>();
-        for (Node node : nodes) {
-            Node copy = (Node) node.clone();
-            nodesCopy.add(copy);
-            nodesToCopyMap.put(node, copy);
-        }
-
-        //clone vehicles
-        ArrayList<Vehicle> activeVehiclesCopy = new ArrayList<>();
-
-        for (Vehicle vehicle : activeVehicles) {
-            Vehicle copy = (Vehicle) vehicle.clone();
-            Road roadCopy = roadsToCopyMap.get(copy.getCurrentRoad());
-            copy.setCurrentRoad(roadCopy);
-            roadCopy.addVehicle(copy);
-            copy.setStartNode(nodesToCopyMap.get(copy.getStartNode()));
-            copy.setEndNode(nodesToCopyMap.get(copy.getEndNode()));
-
-            //get cloned roads for vehicle's path
-            Stack<Road> pathCopy = new Stack<>();
-            for (Road road : copy.getPath()) {
-                pathCopy.push(roadsToCopyMap.get(road));
-            }
-            copy.setPath(pathCopy);
-
-            activeVehiclesCopy.add(copy);
-        }
-        //clone nodes' neighbours
-        for (Node copy : nodesCopy) {
-            Map<Node, Road> neighboursCopy = new HashMap<>();
-            for (Node end : copy.getNeighbours().keySet()) {
-                Road road = copy.getRoad(end);
-                neighboursCopy.put(nodesToCopyMap.get(end), roadsToCopyMap.get(road));
-            }
-            copy.setNeighbours(neighboursCopy);
-        }
-
-        //set cloned roads' start and end nodes to the cloned nodes
-        for (Road copy : roadsCopy) {
-            copy.setStartNode(nodesToCopyMap.get(copy.getStartNode()));
-            copy.setEndNode(nodesToCopyMap.get(copy.getEndNode()));
-        }
+    public static double calculateFuture(Node startNode, Node endNode, List<Vehicle> activeVehicles,
+                                         Stack<Road> path, boolean isLeastDensity) {
 
         //-------------- CALCULATING TIME TAKEN --------------
 
         double totalCost = 0;
         int maxTimeSteps = 600;
         int currentTimeSteps = 0;
-        Node currentNode = nodesToCopyMap.get(startNode);
-        Node endNodeCopy = nodesToCopyMap.get(endNode);
+        Node currentNode = startNode;
 
-        Vehicle v = new Vehicle(TYPE_FUTURE_DIJKSTRA); //"dummy" of the vehicle a path will be created for
+        Vehicle v = new Vehicle(TYPE_NULL); //"dummy" of the vehicle a path will be created for
+
+
+        //TODO: DOES NOT WORK: MAKE SURE TO ALLOW FOR FUTURE SIMULATION BY CLONING LIKE IN TIMECONTROLLER
 
         //copy path to new stack
         Stack<Road> pathCopy = new Stack<>();
         for (Road road : path) {
-            pathCopy.push(roadsToCopyMap.get(road));
+            pathCopy.push(road);
         }
+
+        ArrayList<Vehicle> activeVehiclesCopy = new ArrayList<>();
+        activeVehiclesCopy.addAll(activeVehicles);
 
         breakpoint:
         //loop through vehicle path until reached endNode
-        while (currentNode != endNodeCopy) {
+        while (currentNode != endNode) {
 
             //determine number of timesteps to get to next node
-            Road currentRoadCopy = pathCopy.pop();
-            if (currentRoadCopy.getDensity() >= Road.MAX_DENSITY) {
+            Road currentRoad = pathCopy.pop();
+            if (currentRoad.getDensity() >= Road.MAX_DENSITY) {
                 return Double.MAX_VALUE;
             }
-            v.setCurrentRoad(currentRoadCopy);
-            v.setCurrentSpeed(currentRoadCopy.calculateCurrentSpeed());
-            int nTimeSteps = v.calculateTimeIncrementsToFinishRoad();
-            currentNode = currentRoadCopy.getEndNode();
+            v.setSimCurrentRoad(currentRoad);
+            v.setSimCurrentSpeed(currentRoad.calculateCurrentSpeed());
+            int nTimeSteps = v.calculateSimTimeIncrementsToFinishRoad();
+            currentNode = currentRoad.getEndNode();
 
-            totalCost += (isLeastDensity) ? currentRoadCopy.getDensity() : nTimeSteps;
+            totalCost += (isLeastDensity) ? currentRoad.getDensity() : nTimeSteps;
 
-            if (currentNode == endNodeCopy) break breakpoint;
+            if (currentNode == endNode) break breakpoint;
 
             //stop if reached threshold time steps, and calc rest of cost based on cars at this time step (used so algorithm doesn't take forever)
             currentTimeSteps += nTimeSteps;
@@ -409,6 +303,7 @@ public class Routing {
                 }
             }
         }
+
         return totalCost;
     }
 

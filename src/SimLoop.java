@@ -1,14 +1,12 @@
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Stack;
 
 public class SimLoop {
 
-    public static int NUM_ITERATIONS = 400;
+    public static int NUM_ITERATIONS = 900;
     public static boolean isPopulated = false;
 
     public static void main(String[] args) {
@@ -17,10 +15,10 @@ public class SimLoop {
         int numCycles = 9;
         int vehiclesIncrement = 1000;
         for (int loop = initial; loop < numCycles*vehiclesIncrement+initial; loop+= vehiclesIncrement) {
+
             //init variables
             TimeController.NUM_VEHICLES = loop;
             Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
-            Graph.calculateConnectedNodes(graph);
             TimeController controller = new TimeController(loop, graph);
             controller.createRandomNodeVehicles();
             Vehicle[] vehicles = controller.getVehicles();
@@ -49,17 +47,20 @@ public class SimLoop {
 
             //POPULATE NETWORK
             isPopulated = false;
-            int initIterations = 0;
+            int initIterations = 20;
             for (int i = 0; i < initIterations; i++) {
-                controller.incrementTime();
+                controller.incrementTime(0);
             }
 
             isPopulated = true;
 
             for (int i = 0; i < NUM_ITERATIONS; i++) {
+                if (i == 38) {
+                    System.out.println();
+                }
                 System.out.println("----------------------\n" +
                         "TIME: " + i);
-                controller.incrementTime();
+                controller.incrementTime(0);
                 System.out.println("(Active Vehicles: " + activeVehicles.size() + ")");
                 /*
                 for (Road road : roads) {
@@ -81,25 +82,22 @@ public class SimLoop {
             int numFinishedTrips = 0;
             int nVehicles = trackedVehicles.size();
             for (Vehicle vehicle : trackedVehicles) {
+                totalDistance += vehicle.getTotalDistance();
                 if (vehicle.isFinished()) {
-                    totalDistance += vehicle.getTotalDistance();
                     totalTimeTakenToFinishTrip += vehicle.getActualTripTime();
                     numFinishedTrips++;
                 }
             }
-            double avgDistance = totalDistance / (double) nVehicles;
 
             double proportionOfFinishedTrips = numFinishedTrips / (double) trackedVehicles.size();
 
-            System.out.println("Average distance travelled by vehicles per time iteration: " + (avgDistance / (double) NUM_ITERATIONS));
 
             //average trips
             double avgTimeTakenToFinishTrip = totalTimeTakenToFinishTrip / ((double) nVehicles * proportionOfFinishedTrips);
 
             System.out.println("Average time taken to complete a trip: " + avgTimeTakenToFinishTrip + "(proportion of trips finished: " + proportionOfFinishedTrips + ")");
-            for (Road road : roads) {
-                System.out.println("Road " + road.getNodesAsString() + " total vehicles added: " + road.getTotalVehiclesAdded());
-            }
+            double avgDistance = totalDistance / (double) nVehicles;
+            System.out.println("Average speed: " + (avgDistance / avgTimeTakenToFinishTrip));
 
             //average density
             double averageDensitySum = 0;
@@ -112,6 +110,32 @@ public class SimLoop {
             System.out.println("Total average density = " + totalAverageDensity);
 
             System.out.println("Vehicles sent out: " + controller.getVehiclesSentOut());
+
+            ArrayList<Double> optimalTimeDifferenceList = new ArrayList<>();
+            ArrayList<Double> dijkstraTimeDifferenceList = new ArrayList<>();
+            for (Vehicle vehicle : trackedVehicles) {
+                if (vehicle.isFinished()) {
+                    optimalTimeDifferenceList.add(vehicle.calculateOptimalTimeDifference());
+                    dijkstraTimeDifferenceList.add(vehicle.calculateDijkstraTimeDifference());
+                }
+            }
+            Collections.sort(optimalTimeDifferenceList);
+            int size = optimalTimeDifferenceList.size();
+            for (int i = size/4*3; i < size; i++) {
+                System.out.print(optimalTimeDifferenceList.get(i) + ", ");
+            }
+            System.out.println();
+
+            Collections.sort(dijkstraTimeDifferenceList);
+            size = dijkstraTimeDifferenceList.size();
+            int totalUnexpected = 0;
+            for (int i = 0; i < size; i++) {
+                double d = dijkstraTimeDifferenceList.get(i);
+                if (d != 0.0) totalUnexpected++;
+                System.out.print(d + ", ");
+            }
+            System.out.println();
+            System.out.println("proportion unexpected: " + totalUnexpected/(double) size);
 
 /*
             //write/append to file

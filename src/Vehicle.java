@@ -1,5 +1,5 @@
+import java.util.ArrayList;
 import java.util.Stack;
-
 public class Vehicle implements Cloneable {
 
     public static double VEHICLE_LENGTH = 5;
@@ -17,9 +17,9 @@ public class Vehicle implements Cloneable {
     private Node startNode, endNode;
     private Stack<Road> path;
     private Road currentRoad;
-    private int totalDistance, tripDistance, roadDistance, currentSpeed, unfairnessScore, tripsFinished = 0,
-            optimalTripTime, actualTripTime = 0;
-    private boolean isFinished;
+    private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, unfairnessScore, tripsFinished = 0,
+            optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0;
+    private boolean isFinished = false, isFutureSim = false;
 
     @Override
     /**
@@ -30,48 +30,124 @@ public class Vehicle implements Cloneable {
         Vehicle clone = null;
         try {
             clone = (Vehicle) super.clone();
+
+            //create copy of path
+            Stack<Road> pathCopy = new Stack<>();
+            pathCopy.addAll(path);
+            clone.setPath(pathCopy);
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
-        }
+        } catch (NullPointerException e) { }
         return clone;
     }
+
+
+    //---------------- FUTURE SIMULATION ----------------
+    //current state vars
+    private Stack<Road> simPath= new Stack<>();
+    private Road simCurrentRoad;
+    private int simRoadDistance, simTripDistance, simTotalDistance, simCurrentSpeed, simTripsFinished, simActualTripTime;
+    private boolean simIsFinished;
 
     //-------------- movement methods --------------
 
     public void move() {
-        actualTripTime++;
-        int oldRoadLength = currentRoad.getLength();
+
+        Road tempCurrentRoad;
+        Stack<Road> tempPath;
+        int tempCurrentSpeed, tempTotalDistance, tempTripDistance, tempRoadDistance, tempTripsFinished, tempActualTripTime;
+        boolean tempIsFinished;
+
+        if (isFutureSim) {
+            tempCurrentRoad = simCurrentRoad;
+            tempPath = simPath;
+            tempCurrentSpeed = simCurrentSpeed;
+            tempRoadDistance = simRoadDistance;
+            tempTripDistance = simTripDistance;
+            tempTotalDistance = simTotalDistance;
+            tempIsFinished = simIsFinished;
+            tempTripsFinished = simTripsFinished;
+            tempActualTripTime = simActualTripTime;
+        }
+        else {
+            tempCurrentRoad = currentRoad;
+            tempPath = path;
+            tempCurrentSpeed = currentSpeed;
+            tempRoadDistance = roadDistance;
+            tempTripDistance = tripDistance;
+            tempTotalDistance = totalDistance;
+            tempIsFinished = isFinished;
+            tempTripsFinished = tripsFinished;
+            tempActualTripTime = actualTripTime;
+        }
+
+
+        tempActualTripTime++;
+        int oldRoadLength = tempCurrentRoad.getLength();
 
         //check if move onto new road
-        int difference = oldRoadLength - (roadDistance + currentSpeed);
+        int difference = oldRoadLength - (tempRoadDistance + tempCurrentSpeed);
         if (difference < 0) { //move to new road
-            if (path.isEmpty()) {
-                isFinished = true;
-                tripsFinished += 1;
+            if (tempPath.isEmpty()) {
+                tempIsFinished = true;
+                tempTripsFinished += 1;
             }
-            if (path.isEmpty() || path.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
+            if (tempPath.isEmpty() || tempPath.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
                 difference = -difference; //turn number positive
-                double proportionOfTimeLeft = (double) difference / (double) currentSpeed;
-                incrementDistances(oldRoadLength - roadDistance); //distance travelled on old road
-                currentRoad.removeVehicle(this);
+                double proportionOfTimeLeft = (double) difference / (double) tempCurrentSpeed;
 
-                if (!isFinished) {
+                //add distance on old road
+                int distanceOnOldRoad = (oldRoadLength - tempRoadDistance); //distance travelled on old road
+                tempRoadDistance += distanceOnOldRoad;
+                tempTripDistance += distanceOnOldRoad;
+                tempTotalDistance += distanceOnOldRoad;
+                tempCurrentRoad.removeVehicle(this);
+
+                if (!tempIsFinished) {
+
                     //remove from old road, add to new road
-                    Road newRoad = path.pop();
+                    Road newRoad = tempPath.pop();
                     newRoad.addVehicle(this);
 
                     //update vars and finish trip for time increment
-                    currentSpeed = newRoad.calculateCurrentSpeed();
-                    int distanceOnNewRoad = (int) (currentSpeed * proportionOfTimeLeft);
-                    resetRoadDistance();
-                    incrementDistances(distanceOnNewRoad);
-                    currentRoad = newRoad;
+                    tempCurrentSpeed = newRoad.calculateCurrentSpeed();
+                    int distanceOnNewRoad = (int) (tempCurrentSpeed * proportionOfTimeLeft);
+                    tempRoadDistance = 0;
+                    tempRoadDistance += distanceOnNewRoad;
+                    tempTripDistance += distanceOnNewRoad;
+                    tempTotalDistance += distanceOnNewRoad;
+                    tempCurrentRoad = newRoad;
                 }
             }
         }
-
         else {
-            incrementDistances(currentSpeed);
+            tempRoadDistance += tempCurrentSpeed;
+            tempTripDistance += tempCurrentSpeed;
+            tempTotalDistance += tempCurrentSpeed;
+        }
+
+        //set old vars back
+        if (isFutureSim) {
+            simCurrentRoad = tempCurrentRoad;
+            simPath = tempPath;
+            simCurrentSpeed = tempCurrentSpeed;
+            simRoadDistance = tempRoadDistance;
+            simTripDistance = tempTripDistance;
+            simTotalDistance = tempTotalDistance;
+            simIsFinished = tempIsFinished;
+            simTripsFinished = tempTripsFinished;
+            simActualTripTime = tempActualTripTime;
+        }
+        else {
+            currentRoad = tempCurrentRoad;
+            path = tempPath;
+            currentSpeed = tempCurrentSpeed;
+            roadDistance = tempRoadDistance;
+            tripDistance = tempTripDistance;
+            totalDistance = tempTotalDistance;
+            isFinished = tempIsFinished;
+            tripsFinished = tempTripsFinished;
+            actualTripTime = tempActualTripTime;
         }
     }
 
@@ -85,8 +161,16 @@ public class Vehicle implements Cloneable {
         return ( (double) (actualTripTime - optimalTripTime) / (double) optimalTripTime ) * 100;
     }
 
+    public double calculateDijkstraTimeDifference() {
+        return ( (double) (actualTripTime - dijkstraTripTime) / (double) dijkstraTripTime ) * 100;
+    }
+
     public int calculateTimeIncrementsToFinishRoad() {
         return (int) Math.ceil((double) (currentRoad.getLength()) / (double) currentSpeed);
+    }
+
+    public int calculateSimTimeIncrementsToFinishRoad() {
+        return (int) Math.ceil((double) (simCurrentRoad.getLength()) / (double) simCurrentSpeed);
     }
 
     private void incrementDistances(int distance) {
@@ -105,14 +189,22 @@ public class Vehicle implements Cloneable {
 
 
     public Road getCurrentRoad() {
-        return  currentRoad;
+        return  (isFutureSim) ? simCurrentRoad : currentRoad;
     }
 
     public void setCurrentRoad(Road road) {
         currentRoad = road;
     }
 
+    public void setSimCurrentRoad(Road road) {
+        simCurrentRoad = road;
+    }
+
     public void setCurrentSpeed(int speed) {
+        currentSpeed = speed;
+    }
+
+    public void setSimCurrentSpeed(int speed) {
         currentSpeed = speed;
     }
 
@@ -152,12 +244,24 @@ public class Vehicle implements Cloneable {
         this.path = path;
     }
 
+    public void setSimPath(Stack<Road> path) {
+        simPath = path;
+    }
+
     public Stack<Road> getPath() {
-        return path;
+        return (isFutureSim) ? simPath : path;
+    }
+
+    public Stack<Road> getSimPath() {
+        return simPath;
     }
 
     public boolean isFinished() {
-        return isFinished;
+        return (isFutureSim) ? simIsFinished : isFinished;
+    }
+
+    public boolean isSimFinished() {
+        return simIsFinished;
     }
 
     public void setFinished(boolean b) {
@@ -170,6 +274,10 @@ public class Vehicle implements Cloneable {
 
     public int getTripDistance() {
         return tripDistance;
+    }
+
+    public int getSimTripDistance() {
+        return simTripDistance;
     }
 
     public int getRoadDistance() {
@@ -188,7 +296,15 @@ public class Vehicle implements Cloneable {
         optimalTripTime = time;
     }
 
+    public void setDijkstraTripTime(int time) {
+        dijkstraTripTime = time;
+    }
+
     public int getActualTripTime() {
         return actualTripTime;
+    }
+
+    public int getSimActualTripTime() {
+        return simActualTripTime;
     }
 }
