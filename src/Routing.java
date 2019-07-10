@@ -197,15 +197,14 @@ public class Routing {
      *
      * @param startNode
      * @param endNode
-     * @param activeVehicles
-     * @param allPaths
      * @param isLeastDensity is true when measuring least density (i.e. {@code TYPE_FUTURE_LEAST_DENSITY}), and false otherwise
      * @return the least cost path (i.e. {@code Stack<Road>})
      */
-    public static Stack<Road> future(Node startNode, Node endNode, List<Vehicle> activeVehicles,
-                                     Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPaths, boolean isLeastDensity) {
+    public static Stack<Road> future(Node startNode, Node endNode, TimeController timeController, boolean isLeastDensity) {
 
         ArrayList<Stack<Road>> paths = new ArrayList<>();
+        List<Vehicle> activeVehicles = timeController.getActiveVehicles();
+        Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPaths = timeController.getAllPathsMap();
 
         //find list of paths wanted
         for (Tuple tuple : allPaths.keySet()) {
@@ -227,7 +226,7 @@ public class Routing {
         Stack<Road> bestPath = new Stack<>();
         double best = Double.MAX_VALUE;
         for (Stack<Road> path : paths) {
-            double timeTaken = calculateFuture(startNode, endNode, activeVehicles, path, isLeastDensity);
+            double timeTaken = calculateFuture(startNode, endNode, path, timeController, isLeastDensity);
             if (timeTaken < best) {
                 best = timeTaken;
                 bestPath = path;
@@ -237,74 +236,23 @@ public class Routing {
     }
 
 
-    public static double calculateFuture(Node startNode, Node endNode, List<Vehicle> activeVehicles,
-                                         Stack<Road> path, boolean isLeastDensity) {
-
+    public static double calculateFuture(Node startNode, Node endNode, Stack<Road> path, TimeController timeController, boolean isLeastDensity) {
+    //TODO i don't think this works with future density because I'm a numpty
         //-------------- CALCULATING TIME TAKEN --------------
 
-        double totalCost = 0;
         int maxTimeSteps = 600;
         int currentTimeSteps = 0;
-        Node currentNode = startNode;
 
         Vehicle v = new Vehicle(TYPE_NULL); //"dummy" of the vehicle a path will be created for
-
-
-        //TODO: DOES NOT WORK: MAKE SURE TO ALLOW FOR FUTURE SIMULATION BY CLONING LIKE IN TIMECONTROLLER
-
+        v.setStartNode(startNode);
+        v.setEndNode(endNode);
         //copy path to new stack
         Stack<Road> pathCopy = new Stack<>();
         for (Road road : path) {
             pathCopy.push(road);
         }
 
-        ArrayList<Vehicle> activeVehiclesCopy = new ArrayList<>();
-        activeVehiclesCopy.addAll(activeVehicles);
-
-        breakpoint:
-        //loop through vehicle path until reached endNode
-        while (currentNode != endNode) {
-
-            //determine number of timesteps to get to next node
-            Road currentRoad = pathCopy.pop();
-            if (currentRoad.getDensity() >= Road.MAX_DENSITY) {
-                return Double.MAX_VALUE;
-            }
-            v.setSimCurrentRoad(currentRoad);
-            v.setSimCurrentSpeed(currentRoad.calculateCurrentSpeed());
-            int nTimeSteps = v.calculateSimTimeIncrementsToFinishRoad();
-            currentNode = currentRoad.getEndNode();
-
-            totalCost += (isLeastDensity) ? currentRoad.getDensity() : nTimeSteps;
-
-            if (currentNode == endNode) break breakpoint;
-
-            //stop if reached threshold time steps, and calc rest of cost based on cars at this time step (used so algorithm doesn't take forever)
-            currentTimeSteps += nTimeSteps;
-            if (currentTimeSteps > maxTimeSteps) {
-                for (int i = 0; i < pathCopy.size(); i++) { //for every road
-                    Road road = pathCopy.pop();
-                    if (isLeastDensity) {
-                        totalCost += road.getDensity();
-                    }
-                    else {
-                        v.setCurrentRoad(road);
-                        v.setCurrentSpeed(road.calculateCurrentSpeed());
-                        totalCost += v.calculateTimeIncrementsToFinishRoad();
-                    }
-                }
-                break breakpoint;
-            }
-
-            //simulate those timesteps for every vehicle in the graph
-            for (int i = 0; i < nTimeSteps; i++) {
-                for (Vehicle vehicle : activeVehiclesCopy) {
-                    vehicle.move();
-                }
-            }
-        }
-
-        return totalCost;
+        return timeController.futureSim(v, 0, pathCopy);
     }
 
     public static Stack<Road> fair() {

@@ -1,5 +1,4 @@
 import java.util.*;
-//TODO: make subclass of vehicle (e.g. SimVehicle) so you can sim within a sim
 public class TimeController {
     public static int NUM_VEHICLES = 2500;
     public static final int SEED = 1234567890;
@@ -13,7 +12,6 @@ public class TimeController {
         this.nodes = graph.getNodes();
         this.roads = graph.getRoads();
     }
-
 
     private Vehicle[] vehicles = new Vehicle[NUM_VEHICLES];
     private ArrayList<Vehicle> inactiveVehicles = new ArrayList(NUM_VEHICLES);
@@ -48,38 +46,7 @@ public class TimeController {
             //check if node has already been assigned vehicle and the first cell on vehicle's path is free
             if (vehiclesAddedThisIncrement < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
                 //set path
-                switch (vehicle.getRoutingType()) {
-
-                    case Routing.TYPE_DIJKSTRA:
-                        Stack<Road> pathDijkstra = Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, true);
-                        vehicle.setPath(pathDijkstra);
-                        break;
-
-                    case Routing.TYPE_FAIR:
-                        Stack<Road> pathFair = new Stack<>();
-                        pathFair.push(roads.get(3));
-                        pathFair.push(roads.get(1));
-                        vehicle.setPath(pathFair);
-                        break;
-
-                    case Routing.TYPE_LEAST_DENSITY:
-                        Stack<Road> pathLeastDensity = Routing.leastDensity(vehicle.getStartNode(), vehicle.getEndNode(), nodes);
-                        vehicle.setPath(pathLeastDensity);
-                        break;
-
-                    case Routing.TYPE_FUTURE_DIJKSTRA:
-                        Stack<Road> pathFutureTime = Routing.future(vehicle.getStartNode(), vehicle.getEndNode(), tempActiveVehicles, allPathsMap, false);
-                        vehicle.setPath(pathFutureTime);
-                        break;
-
-                    case Routing.TYPE_FUTURE_LEAST_DENSITY:
-                        Stack<Road> pathFutureDensity = Routing.future(vehicle.getStartNode(), vehicle.getEndNode(), tempActiveVehicles, allPathsMap, true);
-                        vehicle.setPath(pathFutureDensity);
-                        break;
-
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + vehicle.getRoutingType());
-                }
+                vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
 
                 //check if path not empty
                 if (vehicle.getPath().size() > 0) {
@@ -102,76 +69,10 @@ public class TimeController {
                             }
                             vehicle.setOptimalTripTime((int) Math.ceil(length/(totalSpeed/(double) numRoads)));
 
-///*
-                            //--------- DIJKSTRA FUTURE SIMULATION ---------
-                            Stack<Road> dijkstraPath = (Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, true));
-
-                            //enable future sim
-                            isFutureSim = true;
-
-                            //clone inactive vehicles
-                            ArrayList<Vehicle> oldInactiveVehicles = tempInactiveVehicles;
-                            ArrayList<Vehicle> newInactiveVehicles = new ArrayList<>();
-                            for (Vehicle v : tempInactiveVehicles) {
-                                Vehicle newVehicle = (Vehicle) v.clone();
-                                newInactiveVehicles.add(newVehicle);
-                            }
-
-                            //clone activeVehicles
-                            ArrayList<Vehicle> oldActiveVehicles = tempActiveVehicles;
-                            ArrayList<Vehicle> newActiveVehicles = new ArrayList<>();
-                            for (Vehicle v : tempActiveVehicles) {
-                                Vehicle newVehicle = (Vehicle) v.clone();
-                                newActiveVehicles.add(newVehicle);
-                            }
-
-                            tempInactiveVehicles = newInactiveVehicles;
-                            tempActiveVehicles = newActiveVehicles;
-
-                            //temporarily clear all roads of traffic
-                            ArrayList<ArrayList<Vehicle>> roadVehicles = new ArrayList<>();
-                            for (Road r : roads) {
-                                roadVehicles.add(r.getVehicles());
-                                r.setVehicles(new ArrayList<>());
-                            }
-
-                            //populate roads with cloned vehicles
-                            for (Vehicle v : tempActiveVehicles) {
-                                v.getCurrentRoad().addVehicle(v);
-                            }
-
-                            //----- simulate future -----
-                            Vehicle vehicleCopy = (Vehicle) vehicle.clone();
-                            vehicleCopy.setPath(dijkstraPath);
-                            Road rd = dijkstraPath.pop();
-                            vehicleCopy.setCurrentRoad(rd);
-                            rd.addVehicle(vehicleCopy);
-                            vehicleCopy.setCurrentSpeed(rd.calculateCurrentSpeed());
-                            tempActiveVehicles.add(vehicleCopy);
-
-                            //increment time
-                            incrementTime(vehiclesAddedThisIncrement);
-                            while (!vehicleCopy.isFinished()) {
-                                incrementTime(0);
-                            }
-
-                            vehicle.setDijkstraTripTime(vehicleCopy.getActualTripTime());
-
-                            //----- reset back to original -----
-
-                            //reset roads
-                            for (int i = 0; i < roads.size(); i++) {
-                                Road r = roads.get(i);
-                                r.setVehicles(roadVehicles.get(i));
-                                r.calculateCurrentSpeed();
-                            }
-
-                            //reset vehicle lists
-                            tempActiveVehicles = oldActiveVehicles;
-                            tempInactiveVehicles = oldInactiveVehicles;
-
-                            isFutureSim = false;
-//*/
+                            //future simulation using dijkstra
+                            Stack<Road> path = getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode());
+                            int dijTime = futureSim(vehicle, vehiclesAddedThisIncrement, path);
+                            vehicle.setDijkstraTripTime(dijTime);
                             vehiclesSentOut++;
                             trackedVehicles.add(vehicle);
                         }
@@ -202,6 +103,7 @@ public class TimeController {
         }
     }
 
+
     private void removeVehicles() {
         ArrayList<Vehicle> vehiclesToRemove = new ArrayList<>();
         for (Vehicle vehicle : tempActiveVehicles) {
@@ -226,6 +128,125 @@ public class TimeController {
             if (SimLoop.isPopulated && !isFutureSim)
                 road.incrementDensitySum();
         }
+    }
+
+
+    public int futureSim(Vehicle vehicle, int vehiclesAddedThisIncrement, Stack<Road> path) {
+
+        //enable future sim
+        isFutureSim = true;
+
+        //clone inactive vehicles
+        ArrayList<Vehicle> oldInactiveVehicles = tempInactiveVehicles;
+
+        //create modified list which doesn't contain current vehicle so it isn't copied into inactive vehicles, as it is copied separately later
+        ArrayList<Vehicle> modifiedInactiveVehicles = new ArrayList<>(tempInactiveVehicles);
+        for (int i = 0; i <= vehiclesAddedThisIncrement; i++) {
+            if (i < tempInactiveVehicles.size()) { //avoid IndexOutOfBound
+                modifiedInactiveVehicles.remove(0);
+            }
+        }
+
+        ArrayList<Vehicle> newInactiveVehicles = new ArrayList<>();
+        for (Vehicle v : modifiedInactiveVehicles) {
+            Vehicle newVehicle = (Vehicle) v.clone();
+            newInactiveVehicles.add(newVehicle);
+        }
+
+        //clone activeVehicles
+        ArrayList<Vehicle> oldActiveVehicles = tempActiveVehicles;
+        ArrayList<Vehicle> newActiveVehicles = new ArrayList<>();
+        for (Vehicle v : tempActiveVehicles) {
+            Vehicle newVehicle = (Vehicle) v.clone();
+            newActiveVehicles.add(newVehicle);
+        }
+
+        tempInactiveVehicles = newInactiveVehicles;
+        tempActiveVehicles = newActiveVehicles;
+
+        //temporarily clear all roads of traffic
+        ArrayList<ArrayList<Vehicle>> roadVehicles = new ArrayList<>();
+        for (Road r : roads) {
+            roadVehicles.add(r.getVehicles());
+            r.setVehicles(new ArrayList<>());
+        }
+
+        //populate roads with cloned vehicles
+        for (Vehicle v : tempActiveVehicles) {
+            v.getCurrentRoad().addVehicle(v);
+        }
+
+        //----- simulate future -----
+        Vehicle vehicleCopy = (Vehicle) vehicle.clone();
+        vehicleCopy.setPath(path);
+        Road rd = path.pop();
+        vehicleCopy.setCurrentRoad(rd);
+        rd.addVehicle(vehicleCopy);
+        vehicleCopy.setCurrentSpeed(rd.calculateCurrentSpeed());
+        tempActiveVehicles.add(vehicleCopy);
+
+        //increment time
+        incrementTime(vehiclesAddedThisIncrement+1);
+        int loopCount = SimLoop.getIncrementCount() + 1; //+1 because we have just incremented time once
+        while (!vehicleCopy.isFinished() && loopCount < SimLoop.NUM_ITERATIONS) {
+            incrementTime(0);
+            loopCount++;
+
+        }
+
+        //----- reset back to original -----
+
+        //reset roads
+        for (int i = 0; i < roads.size(); i++) {
+            Road r = roads.get(i);
+            r.setVehicles(roadVehicles.get(i));
+            r.calculateCurrentSpeed();
+        }
+
+        //reset vehicle lists
+        tempActiveVehicles = oldActiveVehicles;
+        tempInactiveVehicles = oldInactiveVehicles;
+        isFutureSim = false;
+        if (vehicleCopy.isFinished()) return vehicleCopy.getActualTripTime();
+        else return Integer.MAX_VALUE;
+    }
+
+    public Stack<Road> getPathFromRoutingType(int routingType, Node startNode, Node endNode) {
+
+        Stack<Road> path;
+        switch (routingType) {
+
+            case Routing.TYPE_DIJKSTRA:
+                Stack<Road> pathDijkstra = Routing.dijkstra(startNode, endNode, nodes, true);
+                path = pathDijkstra;
+                break;
+
+            case Routing.TYPE_FAIR:
+                Stack<Road> pathFair = new Stack<>();
+                pathFair.push(roads.get(3));
+                pathFair.push(roads.get(1));
+                path = pathFair;
+                break;
+
+            case Routing.TYPE_LEAST_DENSITY:
+                Stack<Road> pathLeastDensity = Routing.leastDensity(startNode, endNode, nodes);
+                path = pathLeastDensity;
+                break;
+
+            case Routing.TYPE_FUTURE_DIJKSTRA:
+                Stack<Road> pathFutureTime = Routing.future(startNode, endNode, this, false);
+                path = pathFutureTime;
+                break;
+
+            case Routing.TYPE_FUTURE_LEAST_DENSITY:
+                Stack<Road> pathFutureDensity = Routing.future(startNode, endNode, this, true);
+                path = pathFutureDensity;
+                break;
+
+            default:
+                throw new IllegalStateException("Unexpected value: " + routingType);
+        }
+        return path;
     }
 
 

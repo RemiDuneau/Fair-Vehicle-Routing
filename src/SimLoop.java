@@ -9,9 +9,14 @@ public class SimLoop {
     public static int NUM_ITERATIONS = 900;
     public static boolean isPopulated = false;
 
+    private static int incrementCount;
+    public static int getIncrementCount() {
+        return incrementCount;
+    }
+
     public static void main(String[] args) {
-        int routingType = Routing.TYPE_DIJKSTRA;
-        int initial = 1000;
+        int routingType = Routing.TYPE_LEAST_DENSITY;
+        int initial = 3000;
         int numCycles = 9;
         int vehiclesIncrement = 1000;
         for (int loop = initial; loop < numCycles*vehiclesIncrement+initial; loop+= vehiclesIncrement) {
@@ -53,28 +58,22 @@ public class SimLoop {
             }
 
             isPopulated = true;
-
-            for (int i = 0; i < NUM_ITERATIONS; i++) {
-                if (i == 38) {
-                    System.out.println();
-                }
-                System.out.println("----------------------\n" +
-                        "TIME: " + i);
-                controller.incrementTime(0);
-                System.out.println("(Active Vehicles: " + activeVehicles.size() + ")");
-                /*
-                for (Road road : roads) {
-                    int totalSpeed = 0;
-                    for (Vehicle vehicle : road.getVehicles()) {
-                        totalSpeed += vehicle.getCurrentSpeed();
-                    }
-                    double avgSpeed = (double) totalSpeed / (double) road.getVehicles().size();
-                    System.out.println("ROAD: " + road.getNodesAsString()
-                            + "; Density = " + road.getDensity() + " (" + road.getVehicles().size() + " vehicles, avg speed: " + avgSpeed + ", time: " + road.getTimeToTraverse() + ")");
-                }
-            */
+            ArrayList<ArrayList<Integer>> roadSizesSimLoop = new ArrayList<>();
+            for (Road road : roads) {
+                roadSizesSimLoop.add(new ArrayList<>());
             }
 
+            //MAIN LOOP
+            for (int i = 0; i < NUM_ITERATIONS; i++) {
+                incrementCount = i;
+                System.out.print("TIME: " + i);
+                controller.incrementTime(0);
+                System.out.println("(Active Vehicles: " + activeVehicles.size() + ")");
+            }
+
+            //--------- STATS ---------
+
+            System.out.println();
 
             //vehicle/road tracking stats stuff
             int totalDistance = 0;
@@ -111,14 +110,19 @@ public class SimLoop {
 
             System.out.println("Vehicles sent out: " + controller.getVehiclesSentOut());
 
+            //------- time differences -------
             ArrayList<Double> optimalTimeDifferenceList = new ArrayList<>();
             ArrayList<Double> dijkstraTimeDifferenceList = new ArrayList<>();
             for (Vehicle vehicle : trackedVehicles) {
                 if (vehicle.isFinished()) {
                     optimalTimeDifferenceList.add(vehicle.calculateOptimalTimeDifference());
-                    dijkstraTimeDifferenceList.add(vehicle.calculateDijkstraTimeDifference());
+
+                    double dijDiff = vehicle.getDijkstraTripTime();
+                    if (dijDiff < Integer.MAX_VALUE)
+                        dijkstraTimeDifferenceList.add(vehicle.calculateDijkstraTimeDifference());
                 }
             }
+
             Collections.sort(optimalTimeDifferenceList);
             int size = optimalTimeDifferenceList.size();
             for (int i = size/4*3; i < size; i++) {
@@ -127,15 +131,8 @@ public class SimLoop {
             System.out.println();
 
             Collections.sort(dijkstraTimeDifferenceList);
-            size = dijkstraTimeDifferenceList.size();
-            int totalUnexpected = 0;
-            for (int i = 0; i < size; i++) {
-                double d = dijkstraTimeDifferenceList.get(i);
-                if (d != 0.0) totalUnexpected++;
-                System.out.print(d + ", ");
-            }
-            System.out.println();
-            System.out.println("proportion unexpected: " + totalUnexpected/(double) size);
+            System.out.println(dijkstraTimeDifferenceList);
+            System.out.println("----------------------------");
 
 /*
             //write/append to file

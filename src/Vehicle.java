@@ -296,6 +296,10 @@ public class Vehicle implements Cloneable {
         optimalTripTime = time;
     }
 
+    public int getDijkstraTripTime() {
+        return dijkstraTripTime;
+    }
+
     public void setDijkstraTripTime(int time) {
         dijkstraTripTime = time;
     }
