@@ -23,7 +23,7 @@ public class Vehicle implements Cloneable {
 
     @Override
     /**
-     * Clones the instance of this Vehicle - note it is not a deep clone and {@code currentRoad} and {@code path} are not properly cloned.
+     * Clones the instance of this Vehicle, and creates a shallow copied instance of {@code path}.
      * @return the clone
      */
     public Object clone() {

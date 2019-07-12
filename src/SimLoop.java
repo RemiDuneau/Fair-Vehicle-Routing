@@ -15,15 +15,15 @@ public class SimLoop {
     }
 
     public static void main(String[] args) {
-        int routingType = Routing.TYPE_LEAST_DENSITY;
-        int initial = 3000;
+        int routingType = Routing.TYPE_FUTURE_DIJKSTRA;
+        int initial = 1000;
         int numCycles = 9;
         int vehiclesIncrement = 1000;
         for (int loop = initial; loop < numCycles*vehiclesIncrement+initial; loop+= vehiclesIncrement) {
 
             //init variables
             TimeController.NUM_VEHICLES = loop;
-            Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
+            Graph graph = XMLParser.parseXML(new File("StreetGridGraph.xml"));
             TimeController controller = new TimeController(loop, graph);
             controller.createRandomNodeVehicles();
             Vehicle[] vehicles = controller.getVehicles();
@@ -50,14 +50,16 @@ public class SimLoop {
             }
             System.out.println("all paths map size: " + allPathsMap.size());
 
+            System.out.println("Populating Network...");
             //POPULATE NETWORK
             isPopulated = false;
-            int initIterations = 20;
+            int initIterations = 0;
             for (int i = 0; i < initIterations; i++) {
-                controller.incrementTime(0);
+                controller.incrementTime(0,0);
             }
 
             isPopulated = true;
+
             ArrayList<ArrayList<Integer>> roadSizesSimLoop = new ArrayList<>();
             for (Road road : roads) {
                 roadSizesSimLoop.add(new ArrayList<>());
@@ -67,8 +69,14 @@ public class SimLoop {
             for (int i = 0; i < NUM_ITERATIONS; i++) {
                 incrementCount = i;
                 System.out.print("TIME: " + i);
-                controller.incrementTime(0);
-                System.out.println("(Active Vehicles: " + activeVehicles.size() + ")");
+                controller.incrementTime(0,0);
+                if (incrementCount >= controller.ITERATION) {
+                    for (int j = 0; j < roads.size(); j++) {
+                        Road r = roads.get(j);
+                        roadSizesSimLoop.get(j).add(r.getVehicles().size());
+                    }
+                }
+                System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")");
             }
 
             //--------- STATS ---------
@@ -113,13 +121,15 @@ public class SimLoop {
             //------- time differences -------
             ArrayList<Double> optimalTimeDifferenceList = new ArrayList<>();
             ArrayList<Double> dijkstraTimeDifferenceList = new ArrayList<>();
-            for (Vehicle vehicle : trackedVehicles) {
+            for (int i = 0; i < trackedVehicles.size(); i++) {
+                Vehicle vehicle = trackedVehicles.get(i);
+            //for (Vehicle vehicle : trackedVehicles) {
                 if (vehicle.isFinished()) {
                     optimalTimeDifferenceList.add(vehicle.calculateOptimalTimeDifference());
-
-                    double dijDiff = vehicle.getDijkstraTripTime();
-                    if (dijDiff < Integer.MAX_VALUE)
+                    double dijTime = vehicle.getDijkstraTripTime();
+                    if (dijTime < Integer.MAX_VALUE) {
                         dijkstraTimeDifferenceList.add(vehicle.calculateDijkstraTimeDifference());
+                    }
                 }
             }
 
@@ -132,8 +142,33 @@ public class SimLoop {
 
             Collections.sort(dijkstraTimeDifferenceList);
             System.out.println(dijkstraTimeDifferenceList);
-            System.out.println("----------------------------");
 
+/*
+            //PRINT OUT WHAT'S GOING WRONG
+            ArrayList<ArrayList<Integer>> controllerSizes = controller.roadSizes;
+            for (int i = 0; i < controllerSizes.size(); i++) {
+                ArrayList<Integer> dijSize = controllerSizes.get(i);
+                ArrayList<Integer> actualSize = roadSizesSimLoop.get(i);
+                boolean isBad = false;
+                for (int j = 0; j < dijSize.size(); j++) {
+                    int dij = dijSize.get(j);
+                    int actual = actualSize.get(j);
+                    if (dij - actual != 0) isBad = true;
+                }
+                if (isBad) {
+                    Road road = roads.get(i);
+                    System.out.println("ROAD " + i + " (" + road.getNodesAsString() + "): ");
+                    for (int j = 0; j < dijSize.size(); j++) {
+                        int dij = dijSize.get(j);
+                        int actual = actualSize.get(j);
+                        System.out.print(dij - actual + ", ");
+                    }
+                    System.out.println();
+                }
+            }
+*/
+
+            System.out.println("----------------------------");
 /*
             //write/append to file
             try {

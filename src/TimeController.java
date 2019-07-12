@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.*;
 public class TimeController {
     public static int NUM_VEHICLES = 2500;
@@ -11,6 +12,10 @@ public class TimeController {
         NUM_VEHICLES = numVehicles;
         this.nodes = graph.getNodes();
         this.roads = graph.getRoads();
+
+        for (Road road : roads) {
+            roadSizes.add(new ArrayList<>());
+        }
     }
 
     private Vehicle[] vehicles = new Vehicle[NUM_VEHICLES];
@@ -20,13 +25,28 @@ public class TimeController {
     private ArrayList<Node> nodes;
     private ArrayList<Road> roads;
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
-    private int vehiclesSentOut = 0;
+    private int vehiclesSentOut = 0, vehiclesAddedThisIncrement, vehiclesCheckedThisIncrement;
 
     private ArrayList<Vehicle> tempInactiveVehicles = inactiveVehicles, tempActiveVehicles = activeVehicles;
 
 
-    public void incrementTime(int vehiclesAddedThisIncrement) {
-        addVehicles(vehiclesAddedThisIncrement);
+
+
+    //CEHCKING WHY ITS NOT WORKING DELET LATER
+    public ArrayList<ArrayList<Integer>> roadSizes = new ArrayList<>();
+    public int ITERATION = 67;
+    public int INCREMENT = 23;
+
+    public ArrayList<Vehicle> vehiclesFutureSim = new ArrayList<>();
+    public ArrayList<Vehicle> vehiclesNormal = new ArrayList<>();
+
+
+
+
+
+
+    public void incrementTime(int vehiclesAddedThisIncrement, int totalVehiclesChecked) {
+        addVehicles(vehiclesAddedThisIncrement, totalVehiclesChecked);
         moveVehicles();
         removeVehicles();
         updateSpeed();
@@ -36,17 +56,25 @@ public class TimeController {
      * Attempts to add a vehicle to the graph at its start node. at most {@code MAX_VEHICLES_ADDED_PER_TIME_INCREMENT} vehicles are added.
      * Calculates the optimal time of the vehicle, and also the time taken had the routing type been dijkstra (if it is not dijkstra).
      * Sets the current speed to the speed of the road.
-     * @param vehiclesAddedThisIncrement the number of vehicles already added within this time increment. (used during future simulations).
+     * @param vehiclesAdded the number of vehicles already added within this time increment. (used during future simulations).
      *                      Generally this is set to 0.
      */
-    private void addVehicles(int vehiclesAddedThisIncrement) {
+    private void addVehicles(int vehiclesAdded, int vehiclesChecked) {
         ArrayList<Vehicle> vehiclesToRemove = new ArrayList<>();
+
         for (Vehicle vehicle : tempInactiveVehicles) {
+        vehiclesAddedThisIncrement = vehiclesAdded;
+        vehiclesCheckedThisIncrement = vehiclesChecked;
 
             //check if node has already been assigned vehicle and the first cell on vehicle's path is free
-            if (vehiclesAddedThisIncrement < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
-                //set path
-                vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
+            if (vehiclesAdded < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
+
+                //get a dijkstra path if we are in a future simulation with a future algorithm to not enter a recursive loop of simulations.
+                if (isFutureSim && vehicle.getRoutingType() == Routing.TYPE_FUTURE_DIJKSTRA)
+                   vehicle.setPath(getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode()));
+
+                else
+                    vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
 
                 //check if path not empty
                 if (vehicle.getPath().size() > 0) {
@@ -70,9 +98,10 @@ public class TimeController {
                             vehicle.setOptimalTripTime((int) Math.ceil(length/(totalSpeed/(double) numRoads)));
 
                             //future simulation using dijkstra
-                            Stack<Road> path = getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode());
-                            int dijTime = futureSim(vehicle, vehiclesAddedThisIncrement, path);
+                            Stack<Road> path = Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, true);
+                            int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, path);
                             vehicle.setDijkstraTripTime(dijTime);
+
                             vehiclesSentOut++;
                             trackedVehicles.add(vehicle);
                         }
@@ -84,13 +113,15 @@ public class TimeController {
                         road.addVehicle(vehicle);
                         vehicle.setCurrentSpeed(road.calculateCurrentSpeed());
 
-                        vehiclesAddedThisIncrement++;
+                        vehiclesAdded++;
                         vehiclesToRemove.add(vehicle);
                     }
                 }
+                vehiclesChecked++;
             }
-
         }
+
+        //remove vehicles from inactiveVehicles
         for (Vehicle vehicle : vehiclesToRemove) {
             tempInactiveVehicles.remove(vehicle);
         }
@@ -131,7 +162,10 @@ public class TimeController {
     }
 
 
-    public int futureSim(Vehicle vehicle, int vehiclesAddedThisIncrement, Stack<Road> path) {
+
+    public int futureSim(Vehicle vehicle, int vehiclesAddedThisIncrement, int totalVehiclesChecked, Stack<Road> path) {
+
+        if (path.size() < 1) return Integer.MAX_VALUE;
 
         //enable future sim
         isFutureSim = true;
@@ -141,11 +175,14 @@ public class TimeController {
 
         //create modified list which doesn't contain current vehicle so it isn't copied into inactive vehicles, as it is copied separately later
         ArrayList<Vehicle> modifiedInactiveVehicles = new ArrayList<>(tempInactiveVehicles);
-        for (int i = 0; i <= vehiclesAddedThisIncrement; i++) {
+        for (int i = 0; i <= totalVehiclesChecked; i++) {
             if (i < tempInactiveVehicles.size()) { //avoid IndexOutOfBound
-                modifiedInactiveVehicles.remove(0);
+                Vehicle v = tempInactiveVehicles.get(i);
+                if (tempActiveVehicles.contains(v))
+                    modifiedInactiveVehicles.remove(v);
             }
         }
+        modifiedInactiveVehicles.remove(vehicle);
 
         ArrayList<Vehicle> newInactiveVehicles = new ArrayList<>();
         for (Vehicle v : modifiedInactiveVehicles) {
@@ -161,6 +198,7 @@ public class TimeController {
             newActiveVehicles.add(newVehicle);
         }
 
+        //change tempVehicles so incrementTime will work with new lists instead of original ones
         tempInactiveVehicles = newInactiveVehicles;
         tempActiveVehicles = newActiveVehicles;
 
@@ -181,17 +219,20 @@ public class TimeController {
         vehicleCopy.setPath(path);
         Road rd = path.pop();
         vehicleCopy.setCurrentRoad(rd);
+        if (rd.getDensity() >= Road.MAX_DENSITY) return Integer.MAX_VALUE; //assume infinite time if first road is full
         rd.addVehicle(vehicleCopy);
         vehicleCopy.setCurrentSpeed(rd.calculateCurrentSpeed());
         tempActiveVehicles.add(vehicleCopy);
 
         //increment time
-        incrementTime(vehiclesAddedThisIncrement+1);
+        incrementTime(vehiclesAddedThisIncrement + 1, totalVehiclesChecked + 1);
         int loopCount = SimLoop.getIncrementCount() + 1; //+1 because we have just incremented time once
-        while (!vehicleCopy.isFinished() && loopCount < SimLoop.NUM_ITERATIONS) {
-            incrementTime(0);
-            loopCount++;
+        checkDensities(vehiclesAddedThisIncrement);
 
+        while (!vehicleCopy.isFinished() && loopCount < SimLoop.NUM_ITERATIONS) {
+            incrementTime(0, 0);
+            checkDensities(vehiclesAddedThisIncrement);
+            loopCount++;
         }
 
         //----- reset back to original -----
@@ -207,9 +248,30 @@ public class TimeController {
         tempActiveVehicles = oldActiveVehicles;
         tempInactiveVehicles = oldInactiveVehicles;
         isFutureSim = false;
+
         if (vehicleCopy.isFinished()) return vehicleCopy.getActualTripTime();
-        else return Integer.MAX_VALUE;
+
+        //if vehicle is not finished return how long it has travelled + how long it would take to finish trip assuming road densities do not change
+        else {
+            int extraTime = vehicleCopy.calculateTimeIncrementsToFinishRoad();
+            for (Road road : vehicleCopy.getPath()) {
+                extraTime += road.getTimeToTraverse();
+            }
+            return vehicleCopy.getActualTripTime() + extraTime;
+        }
+        //else return Integer.MAX_VALUE;
     }
+
+
+    private void checkDensities(int vehiclesAdded) {
+        if (SimLoop.getIncrementCount() == ITERATION && vehiclesAdded == INCREMENT) {
+            for (int i = 0; i < roads.size(); i++) {
+                Road r = roads.get(i);
+                roadSizes.get(i).add(r.getVehicles().size());
+            }
+        }
+    }
+
 
     public Stack<Road> getPathFromRoutingType(int routingType, Node startNode, Node endNode) {
 
@@ -325,5 +387,13 @@ public class TimeController {
 
     public int getVehiclesSentOut() {
         return vehiclesSentOut;
+    }
+
+    public int getVehiclesAddedThisIncrement() {
+        return vehiclesAddedThisIncrement;
+    }
+
+    public int getVehiclesCheckedThisIncrement() {
+        return vehiclesCheckedThisIncrement;
     }
 }

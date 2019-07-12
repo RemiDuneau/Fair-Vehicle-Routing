@@ -149,7 +149,6 @@ public class Routing {
     public static ArrayList<Stack<Road>> dfsFindAllPaths(Node startNode, Node endNode) {
         ArrayList<ArrayList<Node>> nodePaths = new ArrayList<>();
         Stack<ArrayList<Node>> searchStack = new Stack<>();
-        ArrayList<Node> visited = new ArrayList<>();
         ArrayList<Node> start = new ArrayList<>();
         start.add(startNode);
         searchStack.add(start);
@@ -234,7 +233,7 @@ public class Routing {
         }
         return bestPath;
     }
-
+    // Mark is the best programmer ever
 
     public static double calculateFuture(Node startNode, Node endNode, Stack<Road> path, TimeController timeController, boolean isLeastDensity) {
     //TODO i don't think this works with future density because I'm a numpty
@@ -246,13 +245,14 @@ public class Routing {
         Vehicle v = new Vehicle(TYPE_NULL); //"dummy" of the vehicle a path will be created for
         v.setStartNode(startNode);
         v.setEndNode(endNode);
+
         //copy path to new stack
         Stack<Road> pathCopy = new Stack<>();
         for (Road road : path) {
             pathCopy.push(road);
         }
 
-        return timeController.futureSim(v, 0, pathCopy);
+        return timeController.futureSim(v, timeController.getVehiclesAddedThisIncrement(), timeController.getVehiclesCheckedThisIncrement(), pathCopy);
     }
 
     public static Stack<Road> fair() {
