@@ -16,9 +16,9 @@ public class SimLoop {
 
     public static void main(String[] args) {
         int routingType = Routing.TYPE_FUTURE_DIJKSTRA;
-        int initial = 1000;
+        int initial = 5;
         int numCycles = 9;
-        int vehiclesIncrement = 1000;
+        int vehiclesIncrement = 500;
         for (int loop = initial; loop < numCycles*vehiclesIncrement+initial; loop+= vehiclesIncrement) {
 
             //init variables
@@ -134,14 +134,22 @@ public class SimLoop {
             }
 
             Collections.sort(optimalTimeDifferenceList);
+            System.out.println(optimalTimeDifferenceList);
+            /*
             int size = optimalTimeDifferenceList.size();
             for (int i = size/4*3; i < size; i++) {
                 System.out.print(optimalTimeDifferenceList.get(i) + ", ");
             }
             System.out.println();
+             */
 
             Collections.sort(dijkstraTimeDifferenceList);
             System.out.println(dijkstraTimeDifferenceList);
+            int dijTotal = 0;
+            for (double d : dijkstraTimeDifferenceList) {
+                dijTotal += d;
+            }
+            System.out.println("avg: " + dijTotal/(double) dijkstraTimeDifferenceList.size());
 
 /*
             //PRINT OUT WHAT'S GOING WRONG

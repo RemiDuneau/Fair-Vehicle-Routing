@@ -4,8 +4,10 @@ public class TimeController {
     public static int NUM_VEHICLES = 2500;
     public static final int SEED = 1234567890;
     public static final Random RANDOM = new Random();
-    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES/100, 1);
+    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES / 100, 1);
+
     public static boolean isFutureSim = false;
+    private static int futureSimCounter = 0;
 
     public TimeController(int numVehicles, Graph graph) {
         RANDOM.setSeed(SEED);
@@ -28,8 +30,7 @@ public class TimeController {
     private int vehiclesSentOut = 0, vehiclesAddedThisIncrement, vehiclesCheckedThisIncrement;
 
     private ArrayList<Vehicle> tempInactiveVehicles = inactiveVehicles, tempActiveVehicles = activeVehicles;
-
-
+    private Vehicle vehicleBeingAdded;
 
 
     //CEHCKING WHY ITS NOT WORKING DELET LATER
@@ -39,10 +40,6 @@ public class TimeController {
 
     public ArrayList<Vehicle> vehiclesFutureSim = new ArrayList<>();
     public ArrayList<Vehicle> vehiclesNormal = new ArrayList<>();
-
-
-
-
 
 
     public void incrementTime(int vehiclesAddedThisIncrement, int totalVehiclesChecked) {
@@ -56,6 +53,7 @@ public class TimeController {
      * Attempts to add a vehicle to the graph at its start node. at most {@code MAX_VEHICLES_ADDED_PER_TIME_INCREMENT} vehicles are added.
      * Calculates the optimal time of the vehicle, and also the time taken had the routing type been dijkstra (if it is not dijkstra).
      * Sets the current speed to the speed of the road.
+     *
      * @param vehiclesAdded the number of vehicles already added within this time increment. (used during future simulations).
      *                      Generally this is set to 0.
      */
@@ -63,17 +61,18 @@ public class TimeController {
         ArrayList<Vehicle> vehiclesToRemove = new ArrayList<>();
 
         for (Vehicle vehicle : tempInactiveVehicles) {
-        vehiclesAddedThisIncrement = vehiclesAdded;
-        vehiclesCheckedThisIncrement = vehiclesChecked;
+            vehiclesAddedThisIncrement = vehiclesAdded;
+            vehiclesCheckedThisIncrement = vehiclesChecked;
+            vehicleBeingAdded = vehicle;
 
             //check if node has already been assigned vehicle and the first cell on vehicle's path is free
             if (vehiclesAdded < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
 
                 //get a dijkstra path if we are in a future simulation with a future algorithm to not enter a recursive loop of simulations.
-                if (isFutureSim && vehicle.getRoutingType() == Routing.TYPE_FUTURE_DIJKSTRA)
-                   vehicle.setPath(getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode()));
+                //if (isFutureSim && vehicle.getRoutingType() == Routing.TYPE_FUTURE_DIJKSTRA)
+                //    vehicle.setPath(getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode()));
 
-                else
+                //else
                     vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
 
                 //check if path not empty
@@ -95,7 +94,7 @@ public class TimeController {
                                 length += optimalRoad.getLength();
                                 totalSpeed += optimalRoad.getMaxSpeed();
                             }
-                            vehicle.setOptimalTripTime((int) Math.ceil(length/(totalSpeed/(double) numRoads)));
+                            vehicle.setOptimalTripTime((int) Math.ceil(length / (totalSpeed / (double) numRoads)));
 
                             //future simulation using dijkstra
                             Stack<Road> path = Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, true);
@@ -162,18 +161,17 @@ public class TimeController {
     }
 
 
-
     public int futureSim(Vehicle vehicle, int vehiclesAddedThisIncrement, int totalVehiclesChecked, Stack<Road> path) {
 
         if (path.size() < 1) return Integer.MAX_VALUE;
 
         //enable future sim
-        isFutureSim = true;
+        enableFutureSim();
 
         //clone inactive vehicles
         ArrayList<Vehicle> oldInactiveVehicles = tempInactiveVehicles;
 
-        //create modified list which doesn't contain current vehicle so it isn't copied into inactive vehicles, as it is copied separately later
+        //create modified list which only contains vehicles not visited by addVehicle yet
         ArrayList<Vehicle> modifiedInactiveVehicles = new ArrayList<>(tempInactiveVehicles);
         for (int i = 0; i <= totalVehiclesChecked; i++) {
             if (i < tempInactiveVehicles.size()) { //avoid IndexOutOfBound
@@ -247,11 +245,11 @@ public class TimeController {
         //reset vehicle lists
         tempActiveVehicles = oldActiveVehicles;
         tempInactiveVehicles = oldInactiveVehicles;
-        isFutureSim = false;
+        disableFutureSim();
 
         if (vehicleCopy.isFinished()) return vehicleCopy.getActualTripTime();
 
-        //if vehicle is not finished return how long it has travelled + how long it would take to finish trip assuming road densities do not change
+            //if vehicle is not finished return how long it has travelled + how long it would take to finish trip assuming road densities do not change
         else {
             int extraTime = vehicleCopy.calculateTimeIncrementsToFinishRoad();
             for (Road road : vehicleCopy.getPath()) {
@@ -321,12 +319,12 @@ public class TimeController {
 
         //update 3/4 of vehicles to start at node0, and 1/4 to start at node4
         int j = 0;
-        for (int i = 0; i < 0.75*NUM_VEHICLES; i++){
+        for (int i = 0; i < 0.75 * NUM_VEHICLES; i++) {
             vehicles[i].setStartNode(nodes.get(0));
             vehicles[i].setEndNode(nodes.get(3));
             j++;
         }
-        for (int i = j; i < NUM_VEHICLES; i++){
+        for (int i = j; i < NUM_VEHICLES; i++) {
             vehicles[i].setStartNode(nodes.get(4));
             vehicles[i].setEndNode(nodes.get(3));
         }
@@ -395,5 +393,20 @@ public class TimeController {
 
     public int getVehiclesCheckedThisIncrement() {
         return vehiclesCheckedThisIncrement;
+    }
+
+    public Vehicle getVehicleBeingAdded() {
+        return vehicleBeingAdded;
+    }
+
+
+    public void enableFutureSim() {
+        futureSimCounter++;
+        isFutureSim = true;
+    }
+
+    public void disableFutureSim() {
+        futureSimCounter--;
+        if (futureSimCounter == 0) isFutureSim = false;
     }
 }

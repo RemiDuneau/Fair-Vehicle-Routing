@@ -204,6 +204,7 @@ public class Routing {
         ArrayList<Stack<Road>> paths = new ArrayList<>();
         List<Vehicle> activeVehicles = timeController.getActiveVehicles();
         Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPaths = timeController.getAllPathsMap();
+        Vehicle vehicle = timeController.getVehicleBeingAdded();
 
         //find list of paths wanted
         for (Tuple tuple : allPaths.keySet()) {
@@ -225,7 +226,7 @@ public class Routing {
         Stack<Road> bestPath = new Stack<>();
         double best = Double.MAX_VALUE;
         for (Stack<Road> path : paths) {
-            double timeTaken = calculateFuture(startNode, endNode, path, timeController, isLeastDensity);
+            double timeTaken = calculateFuture(startNode, endNode, path, vehicle, timeController, isLeastDensity);
             if (timeTaken < best) {
                 best = timeTaken;
                 bestPath = path;
@@ -235,16 +236,12 @@ public class Routing {
     }
     // Mark is the best programmer ever
 
-    public static double calculateFuture(Node startNode, Node endNode, Stack<Road> path, TimeController timeController, boolean isLeastDensity) {
+    public static double calculateFuture(Node startNode, Node endNode, Stack<Road> path, Vehicle vehicle, TimeController timeController, boolean isLeastDensity) {
     //TODO i don't think this works with future density because I'm a numpty
         //-------------- CALCULATING TIME TAKEN --------------
 
         int maxTimeSteps = 600;
         int currentTimeSteps = 0;
-
-        Vehicle v = new Vehicle(TYPE_NULL); //"dummy" of the vehicle a path will be created for
-        v.setStartNode(startNode);
-        v.setEndNode(endNode);
 
         //copy path to new stack
         Stack<Road> pathCopy = new Stack<>();
@@ -252,7 +249,7 @@ public class Routing {
             pathCopy.push(road);
         }
 
-        return timeController.futureSim(v, timeController.getVehiclesAddedThisIncrement(), timeController.getVehiclesCheckedThisIncrement(), pathCopy);
+        return timeController.futureSim(vehicle, timeController.getVehiclesAddedThisIncrement(), timeController.getVehiclesCheckedThisIncrement(), pathCopy);
     }
 
     public static Stack<Road> fair() {
