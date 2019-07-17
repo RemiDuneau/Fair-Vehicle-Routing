@@ -13,7 +13,7 @@ public class Road {
 
     private ArrayList<Vehicle> vehicles = new ArrayList<>();
     private Node startNode, endNode;
-    private int length, maxSpeed, currentSpeed, timeToTraverse, totalVehiclesAdded = 0;
+    private int length, maxSpeed, currentSpeed, totalVehiclesAdded = 0;
 
     //state variables
     private double density, densitySum = 0; //proportion of occupied cells
@@ -21,7 +21,6 @@ public class Road {
     public int calculateCurrentSpeed() {
         calculateDensity();
         currentSpeed = Math.max(1, greenbergSpeedEquation()); //minimum speed = 1, so vehicles don't get stuck
-        timeToTraverse = (int) ( (double) length / (double) currentSpeed);
         return currentSpeed;
     }
 
@@ -48,8 +47,22 @@ public class Road {
         return Math.min( maxSpeed, (int) (maxSpeed * Math.log(MAX_DENSITY/density)) );
     }
 
-    public int getTimeToTraverseNoCongestion() {
-        return (int) Math.ceil((double) length / (double) maxSpeed);
+    public double getTimeToTraverseNoCongestion() {
+        return length / (double) maxSpeed;
+    }
+
+    public double getTimeToTraverseNoCongestion(double remainder) {
+        int newLength = length - (int) (maxSpeed * remainder);
+        return newLength / (double) maxSpeed;
+    }
+
+    public double getTimeToTraverse() {
+        return length / (double) currentSpeed;
+    }
+
+    public double getTimeToTraverse(double remainder) {
+        int newLength = length - (int) (currentSpeed * remainder);
+        return newLength / (double) currentSpeed;
     }
 
     public int getMaxSpeed() {
@@ -58,10 +71,6 @@ public class Road {
 
     public int getCurrentSpeed() {
         return currentSpeed;
-    }
-
-    public int getTimeToTraverse() {
-        return timeToTraverse;
     }
 
     public int getLength() {

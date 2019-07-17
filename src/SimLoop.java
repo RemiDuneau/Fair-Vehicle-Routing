@@ -1,8 +1,8 @@
+import java.io.BufferedWriter;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Stack;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 public class SimLoop {
 
@@ -14,17 +14,20 @@ public class SimLoop {
         return incrementCount;
     }
 
-    public static void main(String[] args) {
-        int routingType = Routing.TYPE_FUTURE_DIJKSTRA;
-        int initial = 5;
+    public static void main(String[] args) throws IOException {
+        int routingType = Routing.TYPE_FUTURE_FASTEST;
+        int initial = 3500;
         int numCycles = 9;
         int vehiclesIncrement = 500;
-        for (int loop = initial; loop < numCycles*vehiclesIncrement+initial; loop+= vehiclesIncrement) {
+
+        FileWriter fileWriter = new FileWriter("results.csv", true);
+        BufferedWriter writer = new BufferedWriter(fileWriter);
+        for (int numVehicles = initial; numVehicles < numCycles*vehiclesIncrement+initial; numVehicles+= vehiclesIncrement) {
 
             //init variables
-            TimeController.NUM_VEHICLES = loop;
+            TimeController.NUM_VEHICLES = numVehicles;
             Graph graph = XMLParser.parseXML(new File("StreetGridGraph.xml"));
-            TimeController controller = new TimeController(loop, graph);
+            TimeController controller = new TimeController(numVehicles, graph);
             controller.createRandomNodeVehicles();
             Vehicle[] vehicles = controller.getVehicles();
             ArrayList<Vehicle> trackedVehicles = controller.getTrackedVehicles();
@@ -45,13 +48,13 @@ public class SimLoop {
                 }
                 if (!contains) {
                     ArrayList<Stack<Road>> allPaths = Routing.dfsFindAllPaths(startNode, endNode);
-                    allPathsMap.put(new Tuple<Node, Node>(startNode, endNode), allPaths);
+                    allPathsMap.put(new Tuple<>(startNode, endNode), allPaths);
                 }
             }
             System.out.println("all paths map size: " + allPathsMap.size());
 
-            System.out.println("Populating Network...");
             //POPULATE NETWORK
+            System.out.println("Populating Network...");
             isPopulated = false;
             int initIterations = 0;
             for (int i = 0; i < initIterations; i++) {
@@ -70,12 +73,15 @@ public class SimLoop {
                 incrementCount = i;
                 System.out.print("TIME: " + i);
                 controller.incrementTime(0,0);
-                if (incrementCount >= controller.ITERATION) {
+                /*
+                if (incrementCount >= controller.ADDEDVEHICLES) {
                     for (int j = 0; j < roads.size(); j++) {
                         Road r = roads.get(j);
                         roadSizesSimLoop.get(j).add(r.getVehicles().size());
                     }
                 }
+                 */
+
                 System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")");
             }
 
@@ -87,7 +93,7 @@ public class SimLoop {
             int totalDistance = 0;
             int totalTimeTakenToFinishTrip = 0;
             int numFinishedTrips = 0;
-            int nVehicles = trackedVehicles.size();
+            int nTrackedVehicles = trackedVehicles.size();
             for (Vehicle vehicle : trackedVehicles) {
                 totalDistance += vehicle.getTotalDistance();
                 if (vehicle.isFinished()) {
@@ -100,11 +106,12 @@ public class SimLoop {
 
 
             //average trips
-            double avgTimeTakenToFinishTrip = totalTimeTakenToFinishTrip / ((double) nVehicles * proportionOfFinishedTrips);
+            double avgTimeTakenToFinishTrip = totalTimeTakenToFinishTrip / (double) numFinishedTrips;
 
             System.out.println("Average time taken to complete a trip: " + avgTimeTakenToFinishTrip + "(proportion of trips finished: " + proportionOfFinishedTrips + ")");
-            double avgDistance = totalDistance / (double) nVehicles;
-            System.out.println("Average speed: " + (avgDistance / avgTimeTakenToFinishTrip));
+            double avgDistance = totalDistance / (double) nTrackedVehicles;
+            double averageSpeed = avgDistance / avgTimeTakenToFinishTrip;
+            System.out.println("Average speed: " + (averageSpeed));
 
             //average density
             double averageDensitySum = 0;
@@ -129,28 +136,45 @@ public class SimLoop {
                     double dijTime = vehicle.getDijkstraTripTime();
                     if (dijTime < Integer.MAX_VALUE) {
                         dijkstraTimeDifferenceList.add(vehicle.calculateDijkstraTimeDifference());
+                        if (dijTime > vehicle.getActualTripTime()) {
+                            //System.out.println(i);
+                        }
                     }
                 }
             }
 
             Collections.sort(optimalTimeDifferenceList);
             System.out.println(optimalTimeDifferenceList);
-            /*
-            int size = optimalTimeDifferenceList.size();
-            for (int i = size/4*3; i < size; i++) {
-                System.out.print(optimalTimeDifferenceList.get(i) + ", ");
-            }
-            System.out.println();
-             */
 
             Collections.sort(dijkstraTimeDifferenceList);
-            System.out.println(dijkstraTimeDifferenceList);
-            int dijTotal = 0;
-            for (double d : dijkstraTimeDifferenceList) {
-                dijTotal += d;
-            }
-            System.out.println("avg: " + dijTotal/(double) dijkstraTimeDifferenceList.size());
+            double optimalDiffAverage = AverageUtil.calcAverageDouble(optimalTimeDifferenceList);
+            System.out.println("optimalDiff avg " + optimalDiffAverage);
 
+            int size = (int) ( (0.9) * (double) optimalTimeDifferenceList.size() );
+            ArrayList<Double> optimalTimeDifferenceWorst10Pct = new ArrayList<>();
+            for (int i = size; i < optimalTimeDifferenceList.size(); i++) {
+                optimalTimeDifferenceWorst10Pct.add(optimalTimeDifferenceList.get(i));
+            }
+            double optimalDiffWorst10PctAvg = AverageUtil.calcAverageDouble(optimalTimeDifferenceWorst10Pct);
+            System.out.println("worst 10% average: " + optimalDiffWorst10PctAvg);
+
+
+            System.out.println(dijkstraTimeDifferenceList);
+            double dijDiffAverage = AverageUtil.calcAverageDouble(dijkstraTimeDifferenceList);
+            System.out.println("dijTimeDiff avg " + dijDiffAverage);
+
+            ArrayList<Double> dijTimDifferenceWorst10Pct = new ArrayList<>();
+            for (int i = size; i < optimalTimeDifferenceList.size(); i++) {
+                dijTimDifferenceWorst10Pct.add(dijkstraTimeDifferenceList.get(i));
+            }
+            double dijDiffWorst10PctAvg = AverageUtil.calcAverageDouble(dijTimDifferenceWorst10Pct);
+
+/*
+            writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
+                    + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","
+                    + controller.getProcessingTime() + "\n");
+            writer.flush();
+*/
 /*
             //PRINT OUT WHAT'S GOING WRONG
             ArrayList<ArrayList<Integer>> controllerSizes = controller.roadSizes;
@@ -180,7 +204,7 @@ public class SimLoop {
 /*
             //write/append to file
             try {
-                FileWriter fileWriter = new FileWriter("test.csv", true);
+                FileWriter fileWriter = new FileWriter("results.csv", true);
                 BufferedWriter writer = new BufferedWriter(fileWriter);
                 writer.write(routingType + ", " + TimeController.NUM_VEHICLES + ", " + avgTimeTakenToFinishTrip + ", "
                         + tripsCompletedStdDev + ", " + totalAverageDensity + ", " + controller.getVehiclesSentOut() + "\n");

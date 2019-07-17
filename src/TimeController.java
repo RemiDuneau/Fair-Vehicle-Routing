@@ -1,4 +1,3 @@
-import java.lang.reflect.Array;
 import java.util.*;
 public class TimeController {
     public static int NUM_VEHICLES = 2500;
@@ -28,6 +27,7 @@ public class TimeController {
     private ArrayList<Road> roads;
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
     private int vehiclesSentOut = 0, vehiclesAddedThisIncrement, vehiclesCheckedThisIncrement;
+    private double processingTime = 0;
 
     private ArrayList<Vehicle> tempInactiveVehicles = inactiveVehicles, tempActiveVehicles = activeVehicles;
     private Vehicle vehicleBeingAdded;
@@ -35,8 +35,8 @@ public class TimeController {
 
     //CEHCKING WHY ITS NOT WORKING DELET LATER
     public ArrayList<ArrayList<Integer>> roadSizes = new ArrayList<>();
-    public int ITERATION = 67;
-    public int INCREMENT = 23;
+    public int INCREMENT = 6;
+    public int ADDEDVEHICLES = 1;
 
     public ArrayList<Vehicle> vehiclesFutureSim = new ArrayList<>();
     public ArrayList<Vehicle> vehiclesNormal = new ArrayList<>();
@@ -69,15 +69,22 @@ public class TimeController {
             if (vehiclesAdded < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
 
                 //get a dijkstra path if we are in a future simulation with a future algorithm to not enter a recursive loop of simulations.
-                //if (isFutureSim && vehicle.getRoutingType() == Routing.TYPE_FUTURE_DIJKSTRA)
-                //    vehicle.setPath(getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode()));
+                if (isFutureSim && vehicle.getRoutingType() == Routing.TYPE_FUTURE_FASTEST)
+                    vehicle.setPath(getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode()));
 
-                //else
+                else if (!isFutureSim) {
+                    double startTime = System.nanoTime();
                     vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
+                    double timeTaken = System.nanoTime() - startTime;
+                    processingTime += timeTaken / 1000000.0; //get processingTime in ms
+                }
+
+                else vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
 
                 //check if path not empty
                 if (vehicle.getPath().size() > 0) {
                     Road road = vehicle.getPath().peek();
+                    vehicle.actualPath = (Stack<Road>) vehicle.getPath().clone();
 
                     //check if density < 1
                     if (road.getDensity() < Road.MAX_DENSITY) {
@@ -88,16 +95,18 @@ public class TimeController {
                             //calc optimal time
                             Stack<Road> optimalPath = (Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, false));
                             int numRoads = optimalPath.size();
-                            int length = 0;
-                            int totalSpeed = 0;
+                            double tripTime = 0;
+                            double remainder = 0.0;
                             for (Road optimalRoad : optimalPath) {
-                                length += optimalRoad.getLength();
-                                totalSpeed += optimalRoad.getMaxSpeed();
+                                double timeToTraverse = optimalRoad.getTimeToTraverseNoCongestion(remainder);
+                                tripTime += timeToTraverse;
+                                remainder = timeToTraverse % 1;
                             }
-                            vehicle.setOptimalTripTime((int) Math.ceil(length / (totalSpeed / (double) numRoads)));
+                            vehicle.setOptimalTripTime((int) Math.ceil(tripTime));
 
                             //future simulation using dijkstra
                             Stack<Road> path = Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, true);
+                            vehicle.dijkstraPath = (Stack<Road>) path.clone();
                             int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, path);
                             vehicle.setDijkstraTripTime(dijTime);
 
@@ -251,18 +260,21 @@ public class TimeController {
 
             //if vehicle is not finished return how long it has travelled + how long it would take to finish trip assuming road densities do not change
         else {
-            int extraTime = vehicleCopy.calculateTimeIncrementsToFinishRoad();
+            double extraTime = vehicleCopy.calculateTimeIncrementsToFinishRoad();
+            double remainder = 0.0;
             for (Road road : vehicleCopy.getPath()) {
-                extraTime += road.getTimeToTraverse();
+                double timeToTraverse = road.getTimeToTraverse(remainder);
+                extraTime += timeToTraverse;
+                remainder = timeToTraverse % 1;
             }
-            return vehicleCopy.getActualTripTime() + extraTime;
+            return vehicleCopy.getActualTripTime() + (int) Math.ceil(extraTime);
         }
         //else return Integer.MAX_VALUE;
     }
 
 
     private void checkDensities(int vehiclesAdded) {
-        if (SimLoop.getIncrementCount() == ITERATION && vehiclesAdded == INCREMENT) {
+        if (SimLoop.getIncrementCount() == ADDEDVEHICLES && vehiclesAdded == INCREMENT) {
             for (int i = 0; i < roads.size(); i++) {
                 Road r = roads.get(i);
                 roadSizes.get(i).add(r.getVehicles().size());
@@ -293,7 +305,7 @@ public class TimeController {
                 path = pathLeastDensity;
                 break;
 
-            case Routing.TYPE_FUTURE_DIJKSTRA:
+            case Routing.TYPE_FUTURE_FASTEST:
                 Stack<Road> pathFutureTime = Routing.future(startNode, endNode, this, false);
                 path = pathFutureTime;
                 break;
@@ -408,5 +420,9 @@ public class TimeController {
     public void disableFutureSim() {
         futureSimCounter--;
         if (futureSimCounter == 0) isFutureSim = false;
+    }
+
+    public double getProcessingTime() {
+        return processingTime;
     }
 }

@@ -6,8 +6,12 @@ public class Routing {
     public static final int TYPE_DIJKSTRA = 0;
     public static final int TYPE_FAIR = 1;
     public static final int TYPE_LEAST_DENSITY = 2;
-    public static final int TYPE_FUTURE_DIJKSTRA = 3;
+    public static final int TYPE_FUTURE_FASTEST = 3;
     public static final int TYPE_FUTURE_LEAST_DENSITY = 4;
+
+    public static double timeTakenDijkstra;
+    public static double timeTakenLeastDensity;
+    public static double timeTakenFutureFastest;
 
     /**
      * Finds the shortest path from the start node to the end node taking the path of shortest overall time
@@ -56,13 +60,21 @@ public class Routing {
                     Road road = currentNode.getRoad(neighbour);
 
                     //determine what the time is based on whether road density is being considered (assume road is empty if not)
-                    int time;
+                    double time;
+
+                    //calculate remainder
+                    double remainder = 0.0;
+                    if (previousNodeMap.get(currentNode) != null) {
+                        Node prevNode = previousNodeMap.get(currentNode);
+                        Road prevRoad = prevNode.getRoad(currentNode);
+                        remainder = (isConsideringCongestion) ? prevRoad.getTimeToTraverse() % 1 : prevRoad.getTimeToTraverseNoCongestion() % 1;
+                    }
                     if (isConsideringCongestion)
-                        time = (road.getDensity() >= Road.MAX_DENSITY) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse();
-                    else time = timesMap.get(currentNode) + road.getTimeToTraverseNoCongestion();
+                        time = (road.getDensity() >= Road.MAX_DENSITY) ? Integer.MAX_VALUE : timesMap.get(currentNode) + road.getTimeToTraverse(remainder);
+                    else time = timesMap.get(currentNode) + road.getTimeToTraverseNoCongestion(remainder);
 
                     if (time < timesMap.get(neighbour)) {
-                        timesMap.put(neighbour, time);
+                        timesMap.put(neighbour, (int) time);
                         previousNodeMap.put(neighbour, currentNode);
                     }
                 }
@@ -114,7 +126,7 @@ public class Routing {
             for (Node neighbour : currentNode.getNeighbours().keySet()) {
                 if (unvisited.contains(neighbour)) {
                     Road road = currentNode.getRoad(neighbour);
-                    double density = (road.getDensity() >= Road.MAX_DENSITY) ? Double.MAX_VALUE-10 : densitiesMap.get(currentNode) + road.calculateDensity();
+                    double density = (road.getDensity() >= Road.MAX_DENSITY) ? Double.MAX_VALUE : densitiesMap.get(currentNode) + road.calculateDensity();
                     if (density < densitiesMap.get(neighbour)) {
                         densitiesMap.put(neighbour, density);
                         previousNodeMap.put(neighbour, currentNode);
@@ -230,6 +242,7 @@ public class Routing {
             if (timeTaken < best) {
                 best = timeTaken;
                 bestPath = path;
+                vehicle.estimatedTime = timeTaken;
             }
         }
         return bestPath;
