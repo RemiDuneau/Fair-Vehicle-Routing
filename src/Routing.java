@@ -2,17 +2,130 @@
 import java.util.*;
 
 public class Routing {
+
     public static final int TYPE_NULL = -1;
     public static final int TYPE_DIJKSTRA = 0;
-    public static final int TYPE_FAIR = 1;
+    public static final int TYPE_DIJKSTRA_NO_CONGESTION = 1;
     public static final int TYPE_LEAST_DENSITY = 2;
-    public static final int TYPE_FUTURE_FASTEST = 3;
-    public static final int TYPE_FUTURE_LEAST_DENSITY = 4;
+    public static final int TYPE_LEAST_DENSITY_SAFE = 3;
+    public static final int TYPE_FUTURE_FASTEST = 4;
+    public static final int TYPE_FUTURE_LEAST_DENSITY = 5;
 
-    public static double timeTakenDijkstra;
-    public static double timeTakenLeastDensity;
-    public static double timeTakenFutureFastest;
+    public static double least_density_safe_threshold = 0.1;
 
+
+    /**
+     * Finds the least cost path from a given start node to a given end node based on the routing type.
+     * @param startNode The starting node
+     * @param endNode The destination node
+     * @param nodes A list of all reachable nodes
+     * @param routingType The routing type, which will determine how each path's cost is calculated.
+     *                    The routing type constants in the {@code Routing} class should be used here (e.g. {@code TYPE_DIJKSTRA}).
+     * @return A least cost path ({@code Stack<Road>}) between the nodes given.
+     */
+    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType) {
+
+        //initialisation
+        ArrayList<Node> unvisited = new ArrayList<>(nodes);
+        Map<Node, Double> costMap = new HashMap<>();
+        Map<Node, Node> previousNodeMap = new HashMap<>();
+
+        //set initial costs
+        for (Node node : nodes) {
+            costMap.put(node, Double.MAX_VALUE);
+            previousNodeMap.put(node, null);
+        }
+        costMap.put(startNode, 0.0); //set start node to 0
+
+        //loop through nodes
+        while (unvisited.size() > 0) {
+
+            //find closest node
+            double minTime = Double.MAX_VALUE;
+            Node currentNode = null;
+            for (Node node : costMap.keySet()) {
+                double time = costMap.get(node);
+                if (time < minTime) {
+                    minTime = time;
+                    currentNode = node;
+                }
+            }
+
+            //return road path if currentNode is endNode
+            if (currentNode == endNode) {
+                return createStack(endNode, previousNodeMap);
+            }
+
+            if (currentNode == null) return new Stack<>();
+
+            //visit neighbours and add to known nodes
+            for (Node neighbour : currentNode.getNeighbours().keySet()) {
+                if (unvisited.contains(neighbour)) {
+                    Road road = currentNode.getRoad(neighbour);
+                    double cost = Double.MAX_VALUE;
+                    double remainder;
+
+
+
+                    //determine what the cost is based on routing type
+                    switch (routingType) {
+                        case TYPE_DIJKSTRA:
+                            remainder = calculateRemainder(currentNode, previousNodeMap, true);
+                            if (road.getDensity() < Road.MAX_DENSITY) cost = costMap.get(currentNode) + road.getTimeToTraverse(remainder);
+                            break;
+
+                        case TYPE_DIJKSTRA_NO_CONGESTION:
+                            remainder = calculateRemainder(currentNode, previousNodeMap, false);
+                            cost = costMap.get(currentNode) + road.getTimeToTraverseNoCongestion(remainder);
+                            break;
+
+                        case TYPE_LEAST_DENSITY:
+                            if (road.getDensity() < Road.MAX_DENSITY) cost = costMap.get(currentNode) + road.calculateDensity();
+                            break;
+
+                        case TYPE_LEAST_DENSITY_SAFE:
+                            double currentDensity = road.getDensity();
+                            boolean isRoutable = true;
+                            for (Road rd: currentNode.getNeighbours().values()) {
+                                if (currentDensity > rd.getDensity() && unvisited.contains(rd.getEndNode()) && rd.getEndNode().getNeighbours().size() > 0) {
+                                    isRoutable = false;
+                                }
+                            }
+
+                            //if road is least dense road or it's density is below the threshold, AND the road doesn't lead to a visited node (avoids loops) then assign new cost
+                            if ((isRoutable || currentDensity < least_density_safe_threshold) && unvisited.contains(road.getEndNode())) {
+                                remainder = calculateRemainder(currentNode, previousNodeMap, true);
+                                if (road.getDensity() < Road.MAX_DENSITY) cost = costMap.get(currentNode) + road.getTimeToTraverse(remainder);
+                            }
+                            break;
+
+                        default:
+                            throw new IllegalStateException("Unexpected value: " + routingType);
+                    }
+                    if (cost < costMap.get(neighbour)) {
+                        costMap.put(neighbour, cost);
+                        previousNodeMap.put(neighbour, currentNode);
+                    }
+                }
+                unvisited.remove(currentNode);
+            }
+            costMap.remove(currentNode);
+        }
+        return null;
+    }
+
+    private static double calculateRemainder(Node currentNode, Map<Node, Node> previousNodeMap, boolean isConsideringCongestion) {
+        if (previousNodeMap.get(currentNode) != null) {
+            Node prevNode = previousNodeMap.get(currentNode);
+            Road prevRoad = prevNode.getRoad(currentNode);
+            return (isConsideringCongestion)
+                    ? 1 - prevRoad.getTimeToTraverse() % 1
+                    : 1 - prevRoad.getTimeToTraverseNoCongestion() % 1;
+        }
+        else return 0.0;
+    }
+
+/*
     /**
      * Finds the shortest path from the start node to the end node taking the path of shortest overall time
      * (i.e. the least time to get to end node).
@@ -21,7 +134,7 @@ public class Routing {
      * @param nodes a list of all nodes in the graph
      * @param isConsideringCongestion true: current road density is taken into account when finding optimal path. false: assume road density is 0.0 when finding optimal path.
      * @return a path ({@code Stack<Road>}) of the optimal route.
-     */
+
     public static Stack<Road> dijkstra(Node startNode, Node endNode, List<Node> nodes, boolean isConsideringCongestion) {
         //initialisation
         ArrayList<Node> unvisited = new ArrayList<>(nodes);
@@ -92,7 +205,7 @@ public class Routing {
      * @param endNode vehicle's end node
      * @param nodes a list of all the nodes in the graph
      * @return a stack of the roads the vehicle should travel on.
-     */
+
     public static Stack<Road> leastDensity(Node startNode, Node endNode, List<Node> nodes) {
         //initialisation
         ArrayList<Node> unvisited = new ArrayList<>(nodes);
@@ -138,6 +251,7 @@ public class Routing {
         }
         return null;
     }
+    */
 
     private static Stack<Road> createStack(Node currentNode, Map<Node, Node> previousNodeMap) {
         Stack<Road> path = new Stack<>();

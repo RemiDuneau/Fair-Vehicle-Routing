@@ -1,6 +1,6 @@
 import java.util.*;
 public class TimeController {
-    public static int NUM_VEHICLES = 2500;
+    public static int NUM_VEHICLES;
     public static final int SEED = 1234567890;
     public static final Random RANDOM = new Random();
     public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES / 100, 1);
@@ -77,6 +77,11 @@ public class TimeController {
                     vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
                     double timeTaken = System.nanoTime() - startTime;
                     processingTime += timeTaken / 1000000.0; //get processingTime in ms
+
+                    //if the path is empty and routing type is TYPE_LEAST_DENSITY_SAFE then use LEAST_DENSITY instead
+                    if (vehicle.getRoutingType() == Routing.TYPE_LEAST_DENSITY_SAFE && vehicle.getPath().size() == 0) {
+                        vehicle.setPath(getPathFromRoutingType(Routing.TYPE_LEAST_DENSITY, vehicle.getStartNode(), vehicle.getEndNode()));
+                    }
                 }
 
                 else vehicle.setPath(getPathFromRoutingType(vehicle.getRoutingType(), vehicle.getStartNode(), vehicle.getEndNode()));
@@ -93,19 +98,22 @@ public class TimeController {
                         if (SimLoop.isPopulated && !isFutureSim) {
 
                             //calc optimal time
-                            Stack<Road> optimalPath = (Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, false));
+                            Stack<Road> optimalPath = getPathFromRoutingType(Routing.TYPE_DIJKSTRA_NO_CONGESTION, vehicle.getStartNode(), vehicle.getEndNode());
+                            vehicle.optimalPath = (Stack<Road>) optimalPath.clone();
+
                             int numRoads = optimalPath.size();
                             double tripTime = 0;
                             double remainder = 0.0;
                             for (Road optimalRoad : optimalPath) {
                                 double timeToTraverse = optimalRoad.getTimeToTraverseNoCongestion(remainder);
                                 tripTime += timeToTraverse;
-                                remainder = timeToTraverse % 1;
+                                remainder = 1 - (timeToTraverse % 1);
                             }
+
                             vehicle.setOptimalTripTime((int) Math.ceil(tripTime));
 
                             //future simulation using dijkstra
-                            Stack<Road> path = Routing.dijkstra(vehicle.getStartNode(), vehicle.getEndNode(), nodes, true);
+                            Stack<Road> path = getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode());
                             vehicle.dijkstraPath = (Stack<Road>) path.clone();
                             int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, path);
                             vehicle.setDijkstraTripTime(dijTime);
@@ -120,7 +128,6 @@ public class TimeController {
                         vehicle.setCurrentRoad(road);
                         road.addVehicle(vehicle);
                         vehicle.setCurrentSpeed(road.calculateCurrentSpeed());
-
                         vehiclesAdded++;
                         vehiclesToRemove.add(vehicle);
                     }
@@ -226,7 +233,12 @@ public class TimeController {
         vehicleCopy.setPath(path);
         Road rd = path.pop();
         vehicleCopy.setCurrentRoad(rd);
-        if (rd.getDensity() >= Road.MAX_DENSITY) return Integer.MAX_VALUE; //assume infinite time if first road is full
+        if (rd.getDensity() >= Road.MAX_DENSITY)  {
+            tempActiveVehicles = oldActiveVehicles;
+            tempInactiveVehicles = oldInactiveVehicles;
+            disableFutureSim();
+            return Integer.MAX_VALUE; //assume infinite time if first road is full
+        }
         rd.addVehicle(vehicleCopy);
         vehicleCopy.setCurrentSpeed(rd.calculateCurrentSpeed());
         tempActiveVehicles.add(vehicleCopy);
@@ -234,11 +246,11 @@ public class TimeController {
         //increment time
         incrementTime(vehiclesAddedThisIncrement + 1, totalVehiclesChecked + 1);
         int loopCount = SimLoop.getIncrementCount() + 1; //+1 because we have just incremented time once
-        checkDensities(vehiclesAddedThisIncrement);
+        //checkDensities(vehiclesAddedThisIncrement);
 
         while (!vehicleCopy.isFinished() && loopCount < SimLoop.NUM_ITERATIONS) {
             incrementTime(0, 0);
-            checkDensities(vehiclesAddedThisIncrement);
+            //checkDensities(vehiclesAddedThisIncrement);
             loopCount++;
         }
 
@@ -258,7 +270,7 @@ public class TimeController {
 
         if (vehicleCopy.isFinished()) return vehicleCopy.getActualTripTime();
 
-            //if vehicle is not finished return how long it has travelled + how long it would take to finish trip assuming road densities do not change
+        //if vehicle is not finished return how long it has travelled + how long it would take to finish trip assuming road densities do not change
         else {
             double extraTime = vehicleCopy.calculateTimeIncrementsToFinishRoad();
             double remainder = 0.0;
@@ -287,24 +299,6 @@ public class TimeController {
 
         Stack<Road> path;
         switch (routingType) {
-
-            case Routing.TYPE_DIJKSTRA:
-                Stack<Road> pathDijkstra = Routing.dijkstra(startNode, endNode, nodes, true);
-                path = pathDijkstra;
-                break;
-
-            case Routing.TYPE_FAIR:
-                Stack<Road> pathFair = new Stack<>();
-                pathFair.push(roads.get(3));
-                pathFair.push(roads.get(1));
-                path = pathFair;
-                break;
-
-            case Routing.TYPE_LEAST_DENSITY:
-                Stack<Road> pathLeastDensity = Routing.leastDensity(startNode, endNode, nodes);
-                path = pathLeastDensity;
-                break;
-
             case Routing.TYPE_FUTURE_FASTEST:
                 Stack<Road> pathFutureTime = Routing.future(startNode, endNode, this, false);
                 path = pathFutureTime;
@@ -315,8 +309,11 @@ public class TimeController {
                 path = pathFutureDensity;
                 break;
 
+            case Routing.TYPE_NULL:
+                throw new IllegalStateException("Unexpected value: " + routingType + ". This routing type cannot be assigned a path.");
+
             default:
-                throw new IllegalStateException("Unexpected value: " + routingType);
+                path = Routing.dijkstraGeneral(startNode, endNode, nodes, routingType);
         }
         return path;
     }

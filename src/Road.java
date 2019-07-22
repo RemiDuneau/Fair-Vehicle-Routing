@@ -9,11 +9,12 @@ public class Road {
         this.length = length;
         this.maxSpeed = maxSpeed;
         currentSpeed = maxSpeed;
+        maxVehicles = (int) Math.floor( length / (double) Vehicle.VEHICLE_LENGTH);
     }
 
     private ArrayList<Vehicle> vehicles = new ArrayList<>();
     private Node startNode, endNode;
-    private int length, maxSpeed, currentSpeed, totalVehiclesAdded = 0;
+    private int length, maxSpeed, currentSpeed, totalVehiclesAdded = 0, maxVehicles;
 
     //state variables
     private double density, densitySum = 0; //proportion of occupied cells
@@ -30,7 +31,7 @@ public class Road {
      * @return the traffic density
      */
     public double calculateDensity() {
-        return density = vehicles.size() * Vehicle.VEHICLE_LENGTH / (double) length;
+        return density = vehicles.size() / (double) maxVehicles;
     }
 
     /**
@@ -60,6 +61,11 @@ public class Road {
         return length / (double) currentSpeed;
     }
 
+    /**
+     * Calculates the time to traverse the road given a proportion of a time increment has already been spent on the road.
+     * @param remainder the proportion of a time increment that has already been spent on this road
+     * @return the time required to traverse the road
+     */
     public double getTimeToTraverse(double remainder) {
         int newLength = length - (int) (currentSpeed * remainder);
         return newLength / (double) currentSpeed;

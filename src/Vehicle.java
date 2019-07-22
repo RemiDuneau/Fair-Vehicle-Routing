@@ -14,6 +14,7 @@ public class Vehicle implements Cloneable {
     //DELETE LATER!!!!
     public Stack<Road> actualPath;
     public Stack<Road> dijkstraPath;
+    public Stack<Road> optimalPath;
     public double estimatedTime;
 
     private int routingType;
