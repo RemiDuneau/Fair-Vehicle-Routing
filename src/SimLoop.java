@@ -6,8 +6,8 @@ import java.util.*;
 
 public class SimLoop {
 
-    public static int NUM_ITERATIONS = 900;
-    public static boolean isPopulated = false;
+    public static int NUM_ITERATIONS = 100;
+    public static boolean isTrackingVehicles = false;
 
     private static int incrementCount;
     public static int getIncrementCount() {
@@ -19,29 +19,26 @@ public class SimLoop {
         BufferedWriter writer = new BufferedWriter(fileWriter);
 
         for (double asdf = 0.0; asdf < 1.0; asdf += 0.1) {
-
+            int routingType = Routing.TYPE_LEAST_DENSITY_SAFE;
             Routing.least_density_safe_threshold = asdf;
-            int routingType = Routing.TYPE_LEAST_DENSITY;
             int initial = 1000;
             int numCycles = 9;
             int vehiclesIncrement = 500;
-            for (int numVehicles = initial; numVehicles < numCycles * vehiclesIncrement + initial; numVehicles += vehiclesIncrement) {
+            for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
 
                 //init variables
-                TimeController.NUM_VEHICLES = numVehicles;
+                int numVehicles = numVehiclesBase * 10;
+                TimeController.NUM_VEHICLES = (numVehicles);
                 Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
-                TimeController controller = new TimeController(numVehicles, graph);
+                TimeController controller = new TimeController(graph);
                 controller.createRandomNodeVehicles();
                 Vehicle[] vehicles = controller.getVehicles();
                 ArrayList<Vehicle> trackedVehicles = controller.getTrackedVehicles();
                 ArrayList<Vehicle> activeVehicles = controller.getActiveVehicles();
                 Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = controller.getAllPathsMap();
                 ArrayList<Road> roads = controller.getRoads();
-                for (Vehicle v : vehicles) {
-                    v.setRoutingType(routingType);
-                }
-/*
-                //find all paths from every vehicle's start node to every vehicle's end node
+
+                //find all paths from every vehicle's start node to end node
                 for (Vehicle v : vehicles) {
                     v.setRoutingType(routingType);
                     Node startNode = v.getStartNode();
@@ -58,16 +55,16 @@ public class SimLoop {
                     }
                 }
                 System.out.println("all paths map size: " + allPathsMap.size());
-*/
+
                 //POPULATE NETWORK
                 System.out.println("Populating Network...");
-                isPopulated = false;
+                isTrackingVehicles = false;
                 int initIterations = 20;
                 for (int i = 0; i < initIterations; i++) {
                     controller.incrementTime(0, 0);
                 }
 
-                isPopulated = true;
+                isTrackingVehicles = true;
 
                 ArrayList<ArrayList<Integer>> roadSizesSimLoop = new ArrayList<>();
                 for (Road road : roads) {
@@ -78,16 +75,32 @@ public class SimLoop {
                 for (int i = 0; i < NUM_ITERATIONS; i++) {
                     incrementCount = i;
                     System.out.print("TIME: " + i);
-                    controller.incrementTime(0, 0);
-        /*
-        if (incrementCount >= controller.ADDEDVEHICLES) {
-            for (int j = 0; j < roads.size(); j++) {
-                Road r = roads.get(j);
-                roadSizesSimLoop.get(j).add(r.getVehicles().size());
-            }
+                    controller.incrementTime();
+    /*
+    if (incrementCount >= controller.ADDEDVEHICLES) {
+        for (int j = 0; j < roads.size(); j++) {
+            Road r = roads.get(j);
+            roadSizesSimLoop.get(j).add(r.getVehicles().size());
         }
-         */
+    }
+     */
                     System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")");
+                }
+
+                //keep incrementing time until all tracked vehicles are finished
+                isTrackingVehicles = false;
+                boolean isAllVehiclesFinished = false;
+                while (!isAllVehiclesFinished) {
+                    controller.incrementTime();
+
+                    //check if all vehicles are finished
+                    boolean isFinished = true;
+                    for (Vehicle v : trackedVehicles) {
+                        if (!v.isFinished()) {
+                            isFinished = false;
+                        }
+                    }
+                    isAllVehiclesFinished = isFinished;
                 }
 
                 //--------- STATS ---------
@@ -176,49 +189,49 @@ public class SimLoop {
                 }
                 double dijDiffWorst10PctAvg = AverageUtil.calcAverageDouble(dijTimDifferenceWorst10Pct);
 
-            writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
-                    + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","
-                    + controller.getProcessingTime() + ", " + Routing.least_density_safe_threshold + "\n");
-            writer.flush();
+                writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
+                        + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","
+                        + controller.getProcessingTime() + ", " + Routing.least_density_safe_threshold + "\n");
+                writer.flush();
 
 
 /*
-            //PRINT OUT WHAT'S GOING WRONG
-            ArrayList<ArrayList<Integer>> controllerSizes = controller.roadSizes;
-            for (int i = 0; i < controllerSizes.size(); i++) {
-                ArrayList<Integer> dijSize = controllerSizes.get(i);
-                ArrayList<Integer> actualSize = roadSizesSimLoop.get(i);
-                boolean isBad = false;
+        //PRINT OUT WHAT'S GOING WRONG
+        ArrayList<ArrayList<Integer>> controllerSizes = controller.roadSizes;
+        for (int i = 0; i < controllerSizes.size(); i++) {
+            ArrayList<Integer> dijSize = controllerSizes.get(i);
+            ArrayList<Integer> actualSize = roadSizesSimLoop.get(i);
+            boolean isBad = false;
+            for (int j = 0; j < dijSize.size(); j++) {
+                int dij = dijSize.get(j);
+                int actual = actualSize.get(j);
+                if (dij - actual != 0) isBad = true;
+            }
+            if (isBad) {
+                Road road = roads.get(i);
+                System.out.println("ROAD " + i + " (" + road.getNodesAsString() + "): ");
                 for (int j = 0; j < dijSize.size(); j++) {
                     int dij = dijSize.get(j);
                     int actual = actualSize.get(j);
-                    if (dij - actual != 0) isBad = true;
+                    System.out.print(dij - actual + ", ");
                 }
-                if (isBad) {
-                    Road road = roads.get(i);
-                    System.out.println("ROAD " + i + " (" + road.getNodesAsString() + "): ");
-                    for (int j = 0; j < dijSize.size(); j++) {
-                        int dij = dijSize.get(j);
-                        int actual = actualSize.get(j);
-                        System.out.print(dij - actual + ", ");
-                    }
-                    System.out.println();
-                }
+                System.out.println();
             }
+        }
 */
 
                 System.out.println("----------------------------");
 /*
-            //write/append to file
-            try {
-                FileWriter fileWriter = new FileWriter("results.csv", true);
-                BufferedWriter writer = new BufferedWriter(fileWriter);
-                writer.write(routingType + ", " + TimeController.NUM_VEHICLES + ", " + avgTimeTakenToFinishTrip + ", "
-                        + tripsCompletedStdDev + ", " + totalAverageDensity + ", " + controller.getVehiclesSentOut() + "\n");
-                writer.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        //write/append to file
+        try {
+            FileWriter fileWriter = new FileWriter("results.csv", true);
+            BufferedWriter writer = new BufferedWriter(fileWriter);
+            writer.write(routingType + ", " + TimeController.NUM_VEHICLES + ", " + avgTimeTakenToFinishTrip + ", "
+                    + tripsCompletedStdDev + ", " + totalAverageDensity + ", " + controller.getVehiclesSentOut() + "\n");
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 */
             }
         }

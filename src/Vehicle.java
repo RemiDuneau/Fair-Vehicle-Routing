@@ -63,29 +63,16 @@ public class Vehicle implements Cloneable {
         Stack<Road> tempPath;
         int tempCurrentSpeed, tempTotalDistance, tempTripDistance, tempRoadDistance, tempTripsFinished, tempActualTripTime;
         boolean tempIsFinished;
+        tempCurrentRoad = currentRoad;
+        tempPath = path;
+        tempCurrentSpeed = currentSpeed;
+        tempRoadDistance = roadDistance;
+        tempTripDistance = tripDistance;
+        tempTotalDistance = totalDistance;
+        tempIsFinished = isFinished;
+        tempTripsFinished = tripsFinished;
+        tempActualTripTime = actualTripTime;
 
-        if (isFutureSim) {
-            tempCurrentRoad = simCurrentRoad;
-            tempPath = simPath;
-            tempCurrentSpeed = simCurrentSpeed;
-            tempRoadDistance = simRoadDistance;
-            tempTripDistance = simTripDistance;
-            tempTotalDistance = simTotalDistance;
-            tempIsFinished = simIsFinished;
-            tempTripsFinished = simTripsFinished;
-            tempActualTripTime = simActualTripTime;
-        }
-        else {
-            tempCurrentRoad = currentRoad;
-            tempPath = path;
-            tempCurrentSpeed = currentSpeed;
-            tempRoadDistance = roadDistance;
-            tempTripDistance = tripDistance;
-            tempTotalDistance = totalDistance;
-            tempIsFinished = isFinished;
-            tempTripsFinished = tripsFinished;
-            tempActualTripTime = actualTripTime;
-        }
 
 
         tempActualTripTime++;
@@ -133,28 +120,15 @@ public class Vehicle implements Cloneable {
         }
 
         //set old vars back
-        if (isFutureSim) {
-            simCurrentRoad = tempCurrentRoad;
-            simPath = tempPath;
-            simCurrentSpeed = tempCurrentSpeed;
-            simRoadDistance = tempRoadDistance;
-            simTripDistance = tempTripDistance;
-            simTotalDistance = tempTotalDistance;
-            simIsFinished = tempIsFinished;
-            simTripsFinished = tempTripsFinished;
-            simActualTripTime = tempActualTripTime;
-        }
-        else {
-            currentRoad = tempCurrentRoad;
-            path = tempPath;
-            currentSpeed = tempCurrentSpeed;
-            roadDistance = tempRoadDistance;
-            tripDistance = tempTripDistance;
-            totalDistance = tempTotalDistance;
-            isFinished = tempIsFinished;
-            tripsFinished = tempTripsFinished;
-            actualTripTime = tempActualTripTime;
-        }
+        currentRoad = tempCurrentRoad;
+        path = tempPath;
+        currentSpeed = tempCurrentSpeed;
+        roadDistance = tempRoadDistance;
+        tripDistance = tempTripDistance;
+        totalDistance = tempTotalDistance;
+        isFinished = tempIsFinished;
+        tripsFinished = tempTripsFinished;
+        actualTripTime = tempActualTripTime;
     }
 
     /**

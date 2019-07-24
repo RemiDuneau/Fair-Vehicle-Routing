@@ -9,7 +9,7 @@ public class Road {
         this.length = length;
         this.maxSpeed = maxSpeed;
         currentSpeed = maxSpeed;
-        maxVehicles = (int) Math.floor( length / (double) Vehicle.VEHICLE_LENGTH);
+        maxVehicles = (int) Math.floor( length / Vehicle.VEHICLE_LENGTH);
     }
 
     private ArrayList<Vehicle> vehicles = new ArrayList<>();
@@ -39,7 +39,7 @@ public class Road {
      */
     public void incrementDensitySum() {
         calculateDensity();
-        if (SimLoop.isPopulated && !TimeController.isFutureSim) densitySum += density;
+        if (SimLoop.isTrackingVehicles && !TimeController.isFutureSim) densitySum += density;
     }
 
 
@@ -114,7 +114,7 @@ public class Road {
     public void addVehicle(Vehicle vehicle) {
         if (!vehicles.contains(vehicle)) {
             vehicles.add(vehicle);
-            if (SimLoop.isPopulated && !TimeController.isFutureSim) totalVehiclesAdded++;
+            if (SimLoop.isTrackingVehicles && !TimeController.isFutureSim) totalVehiclesAdded++;
         }
     }
 

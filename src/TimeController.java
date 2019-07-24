@@ -3,10 +3,20 @@ public class TimeController {
     public static int NUM_VEHICLES;
     public static final int SEED = 1234567890;
     public static final Random RANDOM = new Random();
-    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES / 100, 1);
+    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES / 1000, 1);
 
     public static boolean isFutureSim = false;
     private static int futureSimCounter = 0;
+
+    public TimeController(Graph graph) {
+        RANDOM.setSeed(SEED);
+        this.nodes = graph.getNodes();
+        this.roads = graph.getRoads();
+
+        for (Road road : roads) {
+            roadSizes.add(new ArrayList<>());
+        }
+    }
 
     public TimeController(int numVehicles, Graph graph) {
         RANDOM.setSeed(SEED);
@@ -42,6 +52,10 @@ public class TimeController {
     public ArrayList<Vehicle> vehiclesNormal = new ArrayList<>();
 
 
+    public void incrementTime() {
+        incrementTime(0,0);
+    }
+
     public void incrementTime(int vehiclesAddedThisIncrement, int totalVehiclesChecked) {
         addVehicles(vehiclesAddedThisIncrement, totalVehiclesChecked);
         moveVehicles();
@@ -68,9 +82,9 @@ public class TimeController {
             //check if node has already been assigned vehicle and the first cell on vehicle's path is free
             if (vehiclesAdded < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
 
-                //get a dijkstra path if we are in a future simulation with a future algorithm to not enter a recursive loop of simulations.
+                // if we are in a future simulation with a future algorithm don't add any vehicles.
                 if (isFutureSim && vehicle.getRoutingType() == Routing.TYPE_FUTURE_FASTEST)
-                    vehicle.setPath(getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode()));
+                    vehicle.setPath(new Stack<>());
 
                 else if (!isFutureSim) {
                     double startTime = System.nanoTime();
@@ -95,13 +109,11 @@ public class TimeController {
                     if (road.getDensity() < Road.MAX_DENSITY) {
 
                         //set other state variables and add to activeVehicles
-                        if (SimLoop.isPopulated && !isFutureSim) {
+                        if (SimLoop.isTrackingVehicles && !isFutureSim) {
 
                             //calc optimal time
                             Stack<Road> optimalPath = getPathFromRoutingType(Routing.TYPE_DIJKSTRA_NO_CONGESTION, vehicle.getStartNode(), vehicle.getEndNode());
                             vehicle.optimalPath = (Stack<Road>) optimalPath.clone();
-
-                            int numRoads = optimalPath.size();
                             double tripTime = 0;
                             double remainder = 0.0;
                             for (Road optimalRoad : optimalPath) {
@@ -171,7 +183,7 @@ public class TimeController {
     private void updateSpeed() {
         for (Road road : roads) {
             road.calculateCurrentSpeed();
-            if (SimLoop.isPopulated && !isFutureSim)
+            if (SimLoop.isTrackingVehicles && !isFutureSim)
                 road.incrementDensitySum();
         }
     }
@@ -244,12 +256,12 @@ public class TimeController {
         tempActiveVehicles.add(vehicleCopy);
 
         //increment time
-        incrementTime(vehiclesAddedThisIncrement + 1, totalVehiclesChecked + 1);
+        incrementTime(vehiclesAddedThisIncrement + 1, totalVehiclesChecked + 1); //+1 because we have just added a new vehicle (vehicleCopy)
         int loopCount = SimLoop.getIncrementCount() + 1; //+1 because we have just incremented time once
         //checkDensities(vehiclesAddedThisIncrement);
 
-        while (!vehicleCopy.isFinished() && loopCount < SimLoop.NUM_ITERATIONS) {
-            incrementTime(0, 0);
+        while (!vehicleCopy.isFinished()) {
+            incrementTime();
             //checkDensities(vehiclesAddedThisIncrement);
             loopCount++;
         }
