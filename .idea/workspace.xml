@@ -20,8 +20,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/SimLoop.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="61" column="39" selection-start-line="61" selection-start-column="37" selection-end-line="61" selection-end-column="39" />
+            <state relative-caret-position="374">
+              <caret line="24" column="29" selection-start-line="24" selection-start-column="29" selection-end-line="24" selection-end-column="29" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -32,12 +32,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/TimeController.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="5" column="83" selection-start-line="5" selection-start-column="83" selection-end-line="5" selection-end-column="83" />
-              <folding>
-                <element signature="e#15273#15274#0" expanded="true" />
-                <element signature="e#15311#15312#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="306">
+              <caret line="59" column="70" lean-forward="true" selection-start-line="59" selection-start-column="70" selection-end-line="59" selection-end-column="70" />
             </state>
           </provider>
         </entry>
@@ -107,8 +103,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Routing.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="51" selection-start-line="10" selection-start-column="51" selection-end-line="10" selection-end-column="51" />
+            <state relative-caret-position="238">
+              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
               <folding>
                 <element signature="e#16335#16336#0" expanded="true" />
                 <element signature="e#16372#16373#0" expanded="true" />
@@ -178,7 +174,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="109" />
     <option name="y" value="-18" />
     <option name="width" value="1400" />
@@ -189,7 +185,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -216,6 +211,7 @@
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -250,7 +246,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.SimLoop 2">
+  <component name="RunManager" selected="Application.SimLoop3">
     <configuration name="SimLoop 2" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="SimLoop" />
       <module name="Fair Vehicle Routing Simple Graph Model" />
@@ -259,6 +255,13 @@
       </method>
     </configuration>
     <configuration name="SimLoop" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="SimLoop" />
+      <module name="Fair Vehicle Routing Simple Graph Model" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SimLoop3" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="SimLoop" />
       <module name="Fair Vehicle Routing Simple Graph Model" />
       <method v="2">
@@ -282,6 +285,7 @@
     <list>
       <item itemvalue="Application.Unnamed" />
       <item itemvalue="Application.SimLoop 2" />
+      <item itemvalue="Application.SimLoop3" />
       <item itemvalue="Application.SimLoop" />
       <item itemvalue="Java Scratch.Scratch" />
     </list>
@@ -306,12 +310,13 @@
       <workItem from="1561627169354" duration="212419000" />
       <workItem from="1563182562105" duration="510000" />
       <workItem from="1563183096501" duration="122936000" />
-      <workItem from="1563962682363" duration="11303000" />
+      <workItem from="1563962682363" duration="16036000" />
+      <workItem from="1564054472637" duration="18277000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="409812000" />
+    <option name="totallyTimeSpent" value="432822000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -324,9 +329,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1696" height="1026" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.17359413" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17359413" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -338,7 +342,7 @@
       <window_info anchor="bottom" id="Debug" order="2" weight="0.5363942" />
       <window_info anchor="bottom" id="Cvs" order="3" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
-      <window_info active="true" anchor="bottom" id="Run" order="5" sideWeight="0.49816626" visible="true" weight="0.39977604" />
+      <window_info active="true" anchor="bottom" id="Run" order="5" sideWeight="0.49816626" visible="true" weight="0.3605823" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32922733" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32922733" />
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
@@ -833,17 +837,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Routing.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="51" selection-start-line="10" selection-start-column="51" selection-end-line="10" selection-end-column="51" />
-          <folding>
-            <element signature="e#16335#16336#0" expanded="true" />
-            <element signature="e#16372#16373#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/AverageUtil.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
@@ -851,21 +844,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/Routing.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+          <folding>
+            <element signature="e#16335#16336#0" expanded="true" />
+            <element signature="e#16372#16373#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/TimeController.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="83" selection-start-line="5" selection-start-column="83" selection-end-line="5" selection-end-column="83" />
-          <folding>
-            <element signature="e#15273#15274#0" expanded="true" />
-            <element signature="e#15311#15312#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="306">
+          <caret line="59" column="70" lean-forward="true" selection-start-line="59" selection-start-column="70" selection-end-line="59" selection-end-column="70" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/SimLoop.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="61" column="39" selection-start-line="61" selection-start-column="37" selection-end-line="61" selection-end-column="39" />
+        <state relative-caret-position="374">
+          <caret line="24" column="29" selection-start-line="24" selection-start-column="29" selection-end-line="24" selection-end-column="29" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

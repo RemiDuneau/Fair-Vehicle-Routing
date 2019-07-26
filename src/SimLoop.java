@@ -15,19 +15,19 @@ public class SimLoop {
     }
 
     public static void main(String[] args) throws IOException {
-        FileWriter fileWriter = new FileWriter("results.csv", true);
+        FileWriter fileWriter = new FileWriter("resultsLeastDensitySafe.csv", true);
         BufferedWriter writer = new BufferedWriter(fileWriter);
 
-        for (double asdf = 0.0; asdf < 1.0; asdf += 0.1) {
+        for (double asdf = 0.0; asdf < 1.01; asdf += 0.1) {
             int routingType = Routing.TYPE_LEAST_DENSITY_SAFE;
             Routing.least_density_safe_threshold = asdf;
-            int initial = 1000;
-            int numCycles = 9;
-            int vehiclesIncrement = 500;
+            int initial = 500;
+            int numCycles = 4;
+            int vehiclesIncrement = 250;
             for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
 
                 //init variables
-                int numVehicles = numVehiclesBase * 10;
+                int numVehicles = numVehiclesBase * 5;
                 TimeController.NUM_VEHICLES = (numVehicles);
                 Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
                 TimeController controller = new TimeController(graph);
@@ -50,8 +50,8 @@ public class SimLoop {
                         }
                     }
                     if (!contains) {
-                        ArrayList<Stack<Road>> allPaths = Routing.dfsFindAllPaths(startNode, endNode);
-                        allPathsMap.put(new Tuple<>(startNode, endNode), allPaths);
+                        //ArrayList<Stack<Road>> allPaths = Routing.dfsFindAllPaths(startNode, endNode);
+                        //allPathsMap.put(new Tuple<>(startNode, endNode), allPaths);
                     }
                 }
                 System.out.println("all paths map size: " + allPathsMap.size());
@@ -59,7 +59,7 @@ public class SimLoop {
                 //POPULATE NETWORK
                 System.out.println("Populating Network...");
                 isTrackingVehicles = false;
-                int initIterations = 20;
+                int initIterations = 50;
                 for (int i = 0; i < initIterations; i++) {
                     controller.incrementTime(0, 0);
                 }
@@ -188,6 +188,9 @@ public class SimLoop {
                     dijTimDifferenceWorst10Pct.add(dijkstraTimeDifferenceList.get(i));
                 }
                 double dijDiffWorst10PctAvg = AverageUtil.calcAverageDouble(dijTimDifferenceWorst10Pct);
+                System.out.println("worst 10% average: " + dijTimDifferenceWorst10Pct);
+
+                System.out.println("least density threshold " + Routing.least_density_safe_threshold);
 
                 writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
                         + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","

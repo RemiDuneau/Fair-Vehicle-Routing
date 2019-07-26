@@ -3,7 +3,7 @@ public class TimeController {
     public static int NUM_VEHICLES;
     public static final int SEED = 1234567890;
     public static final Random RANDOM = new Random();
-    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES / 1000, 1);
+    public int MAX_VEHICLES_ADDED_PER_TIME_INCREMENT = Math.max(NUM_VEHICLES / 500, 1);
 
     public static boolean isFutureSim = false;
     private static int futureSimCounter = 0;
