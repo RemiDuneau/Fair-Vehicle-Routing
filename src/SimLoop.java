@@ -15,21 +15,21 @@ public class SimLoop {
     }
 
     public static void main(String[] args) throws IOException {
-        FileWriter fileWriter = new FileWriter("resultsLeastDensitySafe.csv", true);
+        FileWriter fileWriter = new FileWriter("results.csv", true);
         BufferedWriter writer = new BufferedWriter(fileWriter);
 
-        for (double asdf = 0.0; asdf < 1.01; asdf += 0.1) {
-            int routingType = Routing.TYPE_LEAST_DENSITY_SAFE;
-            Routing.least_density_safe_threshold = asdf;
+        for (int asdf = 0; asdf < 5; asdf += 2) {
+            int routingType = asdf;
+            //Routing.least_density_safe_threshold = asdf;
             int initial = 500;
-            int numCycles = 4;
+            int numCycles = 9;
             int vehiclesIncrement = 250;
             for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
 
                 //init variables
                 int numVehicles = numVehiclesBase * 5;
                 TimeController.NUM_VEHICLES = (numVehicles);
-                Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
+                Graph graph = XMLParser.parseXML(new File("StreetGridGraph.xml"));
                 TimeController controller = new TimeController(graph);
                 controller.createRandomNodeVehicles();
                 Vehicle[] vehicles = controller.getVehicles();
