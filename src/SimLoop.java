@@ -22,7 +22,7 @@ public class SimLoop {
             int routingType = asdf;
             //Routing.least_density_safe_threshold = asdf;
             int initial = 500;
-            int numCycles = 9;
+            int numCycles = 6;
             int vehiclesIncrement = 250;
             for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
 
@@ -50,8 +50,8 @@ public class SimLoop {
                         }
                     }
                     if (!contains) {
-                        //ArrayList<Stack<Road>> allPaths = Routing.dfsFindAllPaths(startNode, endNode);
-                        //allPathsMap.put(new Tuple<>(startNode, endNode), allPaths);
+                        ArrayList<Stack<Road>> allPaths = Routing.dfsFindAllPaths(startNode, endNode);
+                        allPathsMap.put(new Tuple<>(startNode, endNode), allPaths);
                     }
                 }
                 System.out.println("all paths map size: " + allPathsMap.size());
