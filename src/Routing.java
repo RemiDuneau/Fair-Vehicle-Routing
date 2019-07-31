@@ -8,11 +8,20 @@ public class Routing {
     public static final int TYPE_DIJKSTRA_NO_CONGESTION = 1;
     public static final int TYPE_LEAST_DENSITY = 2;
     public static final int TYPE_LEAST_DENSITY_SAFE = 3;
-    public static final int TYPE_FUTURE_FASTEST = 4;
-    public static final int TYPE_FUTURE_LEAST_DENSITY = 5;
+    public static final int TYPE_LEAST_DENSITY_ROAD_LENGTH = 4;
+    public static final int TYPE_GREATEST_SPEED_ROAD_LENGTH = 5;
+    public static final int TYPE_FUTURE_FASTEST = 10;
+    public static final int TYPE_FUTURE_LEAST_DENSITY = 11;
 
     public static double least_density_safe_threshold = 0.1;
 
+    public static boolean isDijkstraDiffThresholdEnabled = false;
+    public static double dijkstra_diff_threshold = 1.2;
+
+
+    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType) {
+        return dijkstraGeneral(startNode, endNode, nodes, routingType, Integer.MAX_VALUE);
+    }
 
     /**
      * Finds the least cost path from a given start node to a given end node based on the routing type.
@@ -21,9 +30,10 @@ public class Routing {
      * @param nodes A list of all reachable nodes
      * @param routingType The routing type, which will determine how each path's cost is calculated.
      *                    The routing type constants in the {@code Routing} class should be used here (e.g. {@code TYPE_DIJKSTRA}).
+     * @param dijkstraTripTime the {@code dijkstraTripTime} of the route being calculated for the vehicle
      * @return A least cost path ({@code Stack<Road>}) between the nodes given.
      */
-    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType) {
+    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType, int dijkstraTripTime) {
 
         //initialisation
         ArrayList<Node> unvisited = new ArrayList<>(nodes);
@@ -41,12 +51,12 @@ public class Routing {
         while (unvisited.size() > 0) {
 
             //find closest node
-            double minTime = Double.MAX_VALUE;
+            double minCost = Double.MAX_VALUE;
             Node currentNode = null;
             for (Node node : costMap.keySet()) {
                 double time = costMap.get(node);
-                if (time < minTime) {
-                    minTime = time;
+                if (time < minCost) {
+                    minCost = time;
                     currentNode = node;
                 }
             }
@@ -58,57 +68,89 @@ public class Routing {
 
             if (currentNode == null) return new Stack<>();
 
-            //visit neighbours and add to known nodes
-            for (Node neighbour : currentNode.getNeighbours().keySet()) {
-                if (unvisited.contains(neighbour)) {
-                    Road road = currentNode.getRoad(neighbour);
-                    double cost = Double.MAX_VALUE;
-                    double remainder;
+
+            //calculate if current estimated trip time is greater than dijDiff
+            int estimatedTime = 0;
+            if (isDijkstraDiffThresholdEnabled) {
+                Stack<Road> currentPath = createStack(currentNode, previousNodeMap);
+                double currentRemainder = 0.0;
+                for (Road rd : currentPath) {
+                    estimatedTime += rd.getTimeToTraverse(currentRemainder);
+                    currentRemainder = calculateRemainder(rd, true);
+                }
+            }
+            if (estimatedTime < dijkstraTripTime * dijkstra_diff_threshold) {
 
 
+                //visit neighbours and add to known nodes
+                for (Node neighbour : currentNode.getNeighbours().keySet()) {
+                    if (unvisited.contains(neighbour)) {
+                        Road road = currentNode.getRoad(neighbour);
+                        double cost = Double.MAX_VALUE;
+                        double remainder;
 
-                    //determine what the cost is based on routing type
-                    switch (routingType) {
-                        case TYPE_DIJKSTRA:
-                            remainder = calculateRemainder(currentNode, previousNodeMap, true);
-                            if (road.getDensity() < Road.MAX_DENSITY) cost = costMap.get(currentNode) + road.getTimeToTraverse(remainder);
-                            break;
 
-                        case TYPE_DIJKSTRA_NO_CONGESTION:
-                            remainder = calculateRemainder(currentNode, previousNodeMap, false);
-                            cost = costMap.get(currentNode) + road.getTimeToTraverseNoCongestion(remainder);
-                            break;
-
-                        case TYPE_LEAST_DENSITY:
-                            if (road.getDensity() < Road.MAX_DENSITY) cost = costMap.get(currentNode) + road.calculateDensity();
-                            break;
-
-                        case TYPE_LEAST_DENSITY_SAFE:
-                            double currentDensity = road.getDensity();
-                            boolean isRoutable = true;
-                            for (Road rd: currentNode.getNeighbours().values()) {
-                                if (currentDensity > rd.getDensity() && unvisited.contains(rd.getEndNode()) && rd.getEndNode().getNeighbours().size() > 0) {
-                                    isRoutable = false;
-                                }
-                            }
-
-                            //if road is least dense road or it's density is below the threshold, AND the road doesn't lead to a visited node (avoids loops) then assign new cost
-                            if ((isRoutable || currentDensity < least_density_safe_threshold) && unvisited.contains(road.getEndNode())) {
+                        //determine what the cost is based on routing type
+                        switch (routingType) {
+                            case TYPE_DIJKSTRA:
                                 remainder = calculateRemainder(currentNode, previousNodeMap, true);
-                                if (road.getDensity() < Road.MAX_DENSITY) cost = costMap.get(currentNode) + road.getTimeToTraverse(remainder);
-                            }
-                            break;
+                                if (road.getDensity() < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + road.getTimeToTraverse(remainder);
+                                break;
 
-                        default:
-                            throw new IllegalStateException("Unexpected value: " + routingType);
-                    }
-                    if (cost < costMap.get(neighbour)) {
-                        costMap.put(neighbour, cost);
-                        previousNodeMap.put(neighbour, currentNode);
+                            case TYPE_DIJKSTRA_NO_CONGESTION:
+                                remainder = calculateRemainder(currentNode, previousNodeMap, false);
+                                cost = costMap.get(currentNode) + road.getTimeToTraverseNoCongestion(remainder);
+                                break;
+
+                            case TYPE_LEAST_DENSITY:
+                                double least_dentityDensity = road.calculateDensity();
+                                if (least_dentityDensity < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + least_dentityDensity;
+                                break;
+
+                            case TYPE_LEAST_DENSITY_SAFE:
+                                double currentDensity = road.getDensity();
+                                boolean isRoutable = true;
+                                for (Road rd : currentNode.getNeighbours().values()) {
+                                    if (currentDensity > rd.getDensity() && unvisited.contains(rd.getEndNode()) && rd.getEndNode().getNeighbours().size() > 0) {
+                                        isRoutable = false;
+                                    }
+                                }
+
+                                //if road is least dense road or it's density is below the threshold, AND the road doesn't lead to a visited node (avoids loops) then assign new cost
+                                if ((isRoutable || currentDensity < least_density_safe_threshold) && unvisited.contains(road.getEndNode())) {
+                                    remainder = calculateRemainder(currentNode, previousNodeMap, true);
+                                    if (road.getDensity() < Road.MAX_DENSITY)
+                                        cost = costMap.get(currentNode) + road.getTimeToTraverse(remainder);
+                                }
+                                break;
+
+                            case TYPE_LEAST_DENSITY_ROAD_LENGTH:
+                                double least_dentity_road_lengthDensity = road.calculateDensity();
+                                if (least_dentity_road_lengthDensity < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + least_dentity_road_lengthDensity * road.getLength();
+                                break;
+
+                            case TYPE_GREATEST_SPEED_ROAD_LENGTH:
+                                double greatest_speed_road_lengthSpeed = 1 / (double) road.calculateCurrentSpeed();
+                                if (road.getDensity() < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + greatest_speed_road_lengthSpeed * road.getLength();
+                                break;
+
+                            default:
+                                throw new IllegalStateException("Unexpected value: " + routingType);
+                        }
+
+                        //update maps
+                        if (cost < costMap.get(neighbour)) {
+                            costMap.put(neighbour, cost);
+                            previousNodeMap.put(neighbour, currentNode);
+                        }
                     }
                 }
-                unvisited.remove(currentNode);
             }
+            unvisited.remove(currentNode);
             costMap.remove(currentNode);
         }
         return null;
@@ -118,11 +160,15 @@ public class Routing {
         if (previousNodeMap.get(currentNode) != null) {
             Node prevNode = previousNodeMap.get(currentNode);
             Road prevRoad = prevNode.getRoad(currentNode);
-            return (isConsideringCongestion)
-                    ? 1 - prevRoad.getTimeToTraverse() % 1
-                    : 1 - prevRoad.getTimeToTraverseNoCongestion() % 1;
+            return calculateRemainder(prevRoad, isConsideringCongestion);
         }
         else return 0.0;
+    }
+
+    private static double calculateRemainder(Road road, boolean isConsideringCongestion) {
+        return (isConsideringCongestion)
+                ? 1 - road.getTimeToTraverse() % 1
+                : 1 - road.getTimeToTraverseNoCongestion() % 1;
     }
 
 /*
@@ -356,7 +402,7 @@ public class Routing {
             if (timeTaken < best) {
                 best = timeTaken;
                 bestPath = path;
-                vehicle.estimatedTime = timeTaken;
+                vehicle.estimatedFutureTime = timeTaken;
             }
         }
         return bestPath;

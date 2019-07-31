@@ -67,15 +67,14 @@ public class Graph {
         }
 
         //create roads
-        Random random = new Random();
-        Random RANDOM = TimeController.RANDOM;
+        Random random = new Random(7654321);
         for (int i = 0; i < nodes.size(); i++) {
             if (i > 0) {
-                if (RANDOM.nextDouble() < roadProbability) {
+                if (random.nextDouble() < roadProbability) {
                     Node prevNode = nodes.get(i-1);
                     Node node = nodes.get(i);
-                    int maxSpeed = RANDOM.nextInt(20) + 8; // +8 so minimum speed is 8m/s, or ~ 30km/h, to make roads more realistic
-                    int maxRoadLength = RANDOM.nextInt(2000) + 50; //minimum road length is 50.
+                    int maxSpeed = random.nextInt(20) + 8; // +8 so minimum speed is 8m/s, or ~ 30km/h, to make roads more realistic
+                    int maxRoadLength = random.nextInt(2000) + 50; //minimum road length is 50.
                     Road road1 = new Road(node, prevNode, maxSpeed, maxRoadLength);
                     Road road2 = new Road(prevNode, node, maxSpeed, maxRoadLength);
                     node.addNeighbour(prevNode, road1);
