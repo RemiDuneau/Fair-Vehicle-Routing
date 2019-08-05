@@ -24,6 +24,7 @@ public class XMLParser {
      *     <length>5000</length>
      *     <maxspeed>70</maxspeed>
      *   </road>
+     * </graph>
      */
 
     public static Graph parseXML(File file) {

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.Stack;
 public class Vehicle implements Cloneable {
 
@@ -6,13 +7,26 @@ public class Vehicle implements Cloneable {
 
     public Vehicle(int routingType) {
         this.routingType = routingType;
+        this.isDynamicRouting = false;
     }
+
+    public Vehicle(boolean isDynamicRouting, TimeController controller) {
+        this.isDynamicRouting = isDynamicRouting;
+        this.controller = controller;
+    }
+
+    public Vehicle(int routingType, boolean isDynamicRouting, TimeController controller) {
+        this.routingType = routingType;
+        this.isDynamicRouting = isDynamicRouting;
+        this.controller = controller;
+    }
+
 
     public Vehicle () {}
 
 
     //DELETE LATER!!!!
-    public Stack<Road> actualPath;
+    public Stack<Road> actualPath = new Stack<>();
     public Stack<Road> dijkstraPath;
     public Stack<Road> optimalPath;
     public double estimatedFutureTime;
@@ -25,7 +39,9 @@ public class Vehicle implements Cloneable {
     private Road currentRoad;
     private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, unfairnessScore, tripsFinished = 0,
             optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0;
-    private boolean isFinished = false;
+    private boolean isFinished = false, isDynamicRouting;
+
+    private TimeController controller;
 
     @Override
     /**
@@ -54,16 +70,24 @@ public class Vehicle implements Cloneable {
         //check if move onto new road
         int difference = oldRoadLength - (roadDistance + currentSpeed);
         if (difference < 0) { //move to new road
-            if (path.isEmpty()) {
+
+            //get new path if dynamic routing
+            if (isDynamicRouting) {
+                path = controller.findPath(this, currentRoad.getEndNode(), endNode);
+            }
+
+            //check if finished
+            if (currentRoad.getEndNode() == endNode) {
                 isFinished = true;
                 tripsFinished += 1;
             }
-            if (path.isEmpty() || path.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
+
+            if (isFinished || path.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
                 difference = -difference; //turn number positive
                 double proportionOfTimeLeft = (double) difference / (double) currentSpeed;
 
                 //add distance on old road
-                int distanceOnOldRoad = (oldRoadLength - roadDistance); //distance travelled on old road
+                int distanceOnOldRoad = (oldRoadLength - roadDistance);
                 incrementDistances(distanceOnOldRoad);
                 currentRoad.removeVehicle(this);
 
@@ -213,5 +237,17 @@ public class Vehicle implements Cloneable {
 
     public int getActualTripTime() {
         return actualTripTime;
+    }
+
+    public boolean isDynamicRouting() {
+        return isDynamicRouting;
+    }
+
+    public void setDynamicRouting(boolean b) {
+        isDynamicRouting = b;
+    }
+
+    public void setTimeController(TimeController controller) {
+        this.controller = controller;
     }
 }

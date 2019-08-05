@@ -6,24 +6,26 @@ public class SimLoop {
     public static int NUM_ITERATIONS = 100;
     public static boolean isTrackingVehicles = false;
 
+
+
     private static int incrementCount;
     public static int getIncrementCount() {
         return incrementCount;
     }
 
+
     public static void main(String[] args) throws IOException {
-        FileWriter fileWriter = new FileWriter("DEBUG_DIJKSTRA.txt", true);
+        FileWriter fileWriter = new FileWriter("results2.csv", true);
         BufferedWriter writer = new BufferedWriter(fileWriter);
 
         int routingType = Routing.TYPE_DIJKSTRA;
-        int initial = 500;
-        int numCycles = 3;
+        int initial = 1250;
+        int numCycles = 9;
         int vehiclesIncrement = 250;
         for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
 
             //init variables
             int numVehicles = numVehiclesBase * 5;
-            //TimeController.RANDOM = new Random(TimeController.SEED);
             TimeController.NUM_VEHICLES = (numVehicles);
             Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
             TimeController controller = new TimeController(graph);
@@ -37,6 +39,12 @@ public class SimLoop {
             //find all paths from every vehicle's start node to end node
             for (Vehicle v : vehicles) {
                 v.setRoutingType(routingType);
+
+                if (Routing.enableDynamicRouting) {
+                    v.setDynamicRouting(true);
+                    v.setTimeController(controller);
+                }
+
                 Node startNode = v.getStartNode();
                 Node endNode = v.getEndNode();
                 boolean contains = false;
@@ -60,12 +68,6 @@ public class SimLoop {
                 controller.incrementTime(0, 0);
             }
 
-            double totalDensity = 0.0;
-            for (Road road : roads) {
-                totalDensity += road.calculateDensity();
-            }
-            System.out.println(totalDensity);
-
             isTrackingVehicles = true;
 
             ArrayList<ArrayList<Integer>> roadSizesSimLoop = new ArrayList<>();
@@ -85,8 +87,11 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
         roadSizesSimLoop.get(j).add(r.getVehicles().size());
     }
 }
- */
-                System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")");
+ */             double totalDensityPerIteration = 0;
+                for (Road road : roads) {
+                    totalDensityPerIteration += road.getDensity();
+                }
+                System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size() + ")");
             }
 
             //keep incrementing time until all tracked vehicles are finished
@@ -97,16 +102,25 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
 
                 //check if all vehicles are finished
                 boolean isFinished = true;
+                ArrayList<Vehicle> unfinishedVehicles = new ArrayList<>();
                 for (Vehicle v : trackedVehicles) {
                     if (!v.isFinished()) {
                         isFinished = false;
+                        unfinishedVehicles.add(v);
                     }
                 }
+                if (unfinishedVehicles.size() < 10) {
+                    System.out.print("");
+                }
+                System.out.println(unfinishedVehicles.size());
                 isAllVehiclesFinished = isFinished;
             }
 
-            //--------- STATS ---------
 
+
+            //------------------
+            //      STATS
+            //------------------
             System.out.println();
 
             //vehicle/road tracking stats stuff
@@ -132,7 +146,7 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
 
             System.out.println("Average time taken to complete a trip: " + avgTimeTakenToFinishTrip + "(proportion of trips finished: " + proportionOfFinishedTrips + ")");
             double avgDistance = totalDistance / (double) nTrackedVehicles;
-            double averageSpeed = avgDistance / totalTime / (double) nTrackedVehicles;
+            double averageSpeed = avgDistance / (totalTime / (double) nTrackedVehicles);
             System.out.println("Average speed: " + (averageSpeed));
 
             //average density
@@ -154,7 +168,11 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
                 Vehicle vehicle = trackedVehicles.get(i);
                 //for (Vehicle vehicle : trackedVehicles) {
                 if (vehicle.isFinished()) {
-                    optimalTimeDifferenceList.add(vehicle.calculateOptimalTimeDifference());
+                    double optimalTime = vehicle.calculateOptimalTimeDifference();
+                    optimalTimeDifferenceList.add(optimalTime);
+                    if (optimalTime < 0) {
+                        System.out.println(i);
+                    }
                     double dijTime = vehicle.getDijkstraTripTime();
                     if (dijTime < Integer.MAX_VALUE) {
                         dijkstraTimeDifferenceList.add(vehicle.calculateDijkstraTimeDifference());
@@ -196,32 +214,36 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
 
             System.out.println("least density threshold " + Routing.least_density_safe_threshold);
 
-            File file = new File("DEBUG_DIJKSTRA.txt");
+/*
+            //compare paths
+            File file = new File("DEBUG_COSTMAP.txt");
             BufferedReader reader = new BufferedReader(new FileReader(file));
             ArrayList<String> dijDiffActualTripTimes = new ArrayList<>();
             String value;
             while ((value = reader.readLine()) != null) {
                 dijDiffActualTripTimes.add(value);
             }
-            //compare
+
             ArrayList<String> actualTripTimes = new ArrayList<>();
-            for (Vehicle v : trackedVehicles) {
+            for (Vehicle v : vehicles) {
                 String s = "";
                 for (Road road : v.actualPath) {
                     s += road.getNodesAsString() + ", ";
                 }
                 actualTripTimes.add(s);
             }
+
+
             if (numVehiclesBase <= 1000) {
                 int totalDiff = 0;
-                for (int i = 0; i < trackedVehicles.size(); i++) {
-                    String actual = actualTripTimes.get(i);
+                for (int i = 0; i < graph.getNodes().size(); i++) {
+                    //String actual = actualTripTimes.get(i);
                     String dijDiff = dijDiffActualTripTimes.get(i);
                     //System.out.println("vehicle " + i + "\nactual : " + actual +"\ndijDiff: " + dijDiff);
                     //System.out.println();
                     if (!actual.equals(dijDiff)) {
-                        System.out.println("vehicle " + i + "\nactual : " + actual +"\ndijDiff: " + dijDiff);
-                        System.out.println();
+                        //System.out.println("vehicle " + i + "\nactual : " + actual +"\ndijDiff: " + dijDiff);
+                        //System.out.println();
                         totalDiff ++;
                     }
 
@@ -229,8 +251,10 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
                 }
                 System.out.println("total: " + totalDiff);
             }
-            /*
-            for (Vehicle vehicle : trackedVehicles) {
+
+ */
+/*
+            for (Vehicle vehicle : vehicles) {
                 for (Road road : vehicle.actualPath) {
                     writer.write(road.getNodesAsString() + ", ");
                 }
@@ -238,7 +262,9 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
                 writer.flush();
             }
 
-             */
+ */
+
+
 /*
             //append to file
             writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
@@ -247,7 +273,7 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
             writer.flush();
 */
 
-/*
+
         //PRINT OUT WHAT'S GOING WRONG
         ArrayList<ArrayList<Integer>> controllerSizes = controller.roadSizes;
         for (int i = 0; i < controllerSizes.size(); i++) {
@@ -270,7 +296,7 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
                 System.out.println();
             }
         }
-*/
+
 
             System.out.println("----------------------------");
 /*
