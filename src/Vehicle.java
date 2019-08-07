@@ -39,7 +39,7 @@ public class Vehicle implements Cloneable {
     private Road currentRoad;
     private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, unfairnessScore, tripsFinished = 0,
             optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0;
-    private boolean isFinished = false, isDynamicRouting;
+    private boolean isFinished = false, isStarted = false, isDynamicRouting;
 
     private TimeController controller;
 
@@ -82,7 +82,11 @@ public class Vehicle implements Cloneable {
                 tripsFinished += 1;
             }
 
-            if (isFinished || path.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
+            if (path.isEmpty() && !isFinished) {
+                //this happens in dynamic routing when all roads from current node are full, so path becomes an empty stack.
+            }
+
+            else if (path.isEmpty() || path.peek().getDensity() < Road.MAX_DENSITY) { //check if new road isn't full
                 difference = -difference; //turn number positive
                 double proportionOfTimeLeft = (double) difference / (double) currentSpeed;
 
@@ -201,6 +205,14 @@ public class Vehicle implements Cloneable {
 
     public void setFinished(boolean b) {
         isFinished = b;
+    }
+
+    public boolean isStarted() {
+        return isStarted;
+    }
+
+    public void setStarted(boolean started) {
+        isStarted = started;
     }
 
     public int getTotalDistance() {

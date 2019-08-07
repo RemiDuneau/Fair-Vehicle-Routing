@@ -50,6 +50,7 @@ public class TimeController {
 
     public ArrayList<Vehicle> vehiclesFutureSim = new ArrayList<>();
     public ArrayList<Vehicle> vehiclesNormal = new ArrayList<>();
+    public ArrayList<Vehicle> trackedVehiclesOrdered = new ArrayList<>();
 
 
     public void incrementTime() {
@@ -83,8 +84,8 @@ public class TimeController {
             if (vehiclesAdded < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
 
                 //set diff paths
-                if (SimLoop.isTrackingVehicles && !isFutureSim && vehicle.getDijkstraTripTime() == 0) {
-
+                if (SimLoop.isTrackingVehicles && !isFutureSim && !vehicle.isStarted()) {
+///*
                     //calc optimal time
                     Stack<Road> optimalPath = getPathFromRoutingType(Routing.TYPE_DIJKSTRA_NO_CONGESTION, vehicle.getStartNode(), vehicle.getEndNode());
                     vehicle.optimalPath = (Stack<Road>) optimalPath.clone();
@@ -103,7 +104,7 @@ public class TimeController {
                     vehicle.dijkstraPath = (Stack<Road>) path.clone();
                     int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, path);
                     vehicle.setDijkstraTripTime(dijTime);
-
+//*/
                 }
 
                 //   VEHICLE ROUTING
@@ -120,6 +121,7 @@ public class TimeController {
                             trackedVehicles.add(vehicle);
                         }
                         tempActiveVehicles.add(vehicle);
+                        vehicle.setStarted(true);
 
                         //init vehicle/ update road
                         road = vehicle.getPath().pop();
@@ -272,24 +274,34 @@ public class TimeController {
         }
 
         //----- simulate future -----
+        boolean isVehicleCopyAdded = false;
         Vehicle vehicleCopy = (Vehicle) vehicle.clone();
-        vehicleCopy.setPath(path);
-        Road rd = path.pop();
-        vehicleCopy.setCurrentRoad(rd);
-        vehicleCopy.setDynamicRouting(false);
-        if (rd.getDensity() >= Road.MAX_DENSITY)  {
-            tempActiveVehicles = oldActiveVehicles;
-            tempInactiveVehicles = oldInactiveVehicles;
-            disableFutureSim();
-            return Integer.MAX_VALUE; //assume infinite time if first road is full
-        }
-        rd.addVehicle(vehicleCopy);
-        vehicleCopy.setCurrentSpeed(rd.calculateCurrentSpeed());
-        tempActiveVehicles.add(vehicleCopy);
+        int addAttempts = 0;
+        while (!isVehicleCopyAdded) {
+            Stack<Road> pathCopy = (Stack<Road>) path.clone();
+            vehicleCopy.setPath(pathCopy);
+            Road rd = pathCopy.pop();
+            vehicleCopy.setCurrentRoad(rd);
+            vehicleCopy.setDynamicRouting(false);
+            if (rd.getDensity() < Road.MAX_DENSITY) {
+                isVehicleCopyAdded = true;
+                rd.addVehicle(vehicleCopy);
+                vehicleCopy.setCurrentSpeed(rd.calculateCurrentSpeed());
+                tempActiveVehicles.add(vehicleCopy);
 
-        //increment time
-        incrementTime(vehiclesAddedThisIncrement + 1, totalVehiclesChecked + 1); //+1 because we have just added a new vehicle (vehicleCopy)
-        //checkDensities(vehiclesAddedThisIncrement);
+                if (addAttempts == 0) {
+                    //increment time
+                    incrementTime(vehiclesAddedThisIncrement + 1, totalVehiclesChecked + 1); //+1 because we have just added a new vehicle (vehicleCopy)
+                    //checkDensities(vehiclesAddedThisIncrement);
+                }
+                else incrementTime(1,1);
+            }
+            else {
+                if (addAttempts == 0) incrementTime(vehiclesAddedThisIncrement, totalVehiclesChecked + 1);
+                else incrementTime(0,1);
+            }
+            addAttempts++;
+        }
 
         while (!vehicleCopy.isFinished()) {
             incrementTime();
@@ -388,6 +400,11 @@ public class TimeController {
             }
             vehicle.setStartNode(startNode);
             vehicle.setEndNode(endNode);
+        }
+
+        int initial = MAX_VEHICLES_ADDED_PER_TIME_INCREMENT*SimLoop.INIT_ITERATIONS;
+        for (int n = initial; n < initial + MAX_VEHICLES_ADDED_PER_TIME_INCREMENT*SimLoop.NUM_ITERATIONS; n++) {
+            trackedVehiclesOrdered.add(vehicles[n]);
         }
     }
 

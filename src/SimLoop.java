@@ -4,6 +4,7 @@ import java.util.*;
 public class SimLoop {
 
     public static int NUM_ITERATIONS = 100;
+    public static int INIT_ITERATIONS = 50;
     public static boolean isTrackingVehicles = false;
 
 
@@ -15,11 +16,12 @@ public class SimLoop {
 
 
     public static void main(String[] args) throws IOException {
-        FileWriter fileWriter = new FileWriter("results2.csv", true);
+        FileWriter fileWriter = new FileWriter("resultsDynamic3.csv", true);
         BufferedWriter writer = new BufferedWriter(fileWriter);
+        boolean isWrite = false;
 
-        int routingType = Routing.TYPE_DIJKSTRA;
-        int initial = 1250;
+        int routingType = Routing.TYPE_LEAST_DENSITY;
+        int initial = 1500;
         int numCycles = 9;
         int vehiclesIncrement = 250;
         for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
@@ -63,8 +65,7 @@ public class SimLoop {
             //POPULATE NETWORK
             System.out.println("Populating Network...");
             isTrackingVehicles = false;
-            int initIterations = 50;
-            for (int i = 0; i < initIterations; i++) {
+            for (int i = 0; i < INIT_ITERATIONS; i++) {
                 controller.incrementTime(0, 0);
             }
 
@@ -102,17 +103,13 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
 
                 //check if all vehicles are finished
                 boolean isFinished = true;
-                ArrayList<Vehicle> unfinishedVehicles = new ArrayList<>();
+                isFinishedLoop:
                 for (Vehicle v : trackedVehicles) {
                     if (!v.isFinished()) {
                         isFinished = false;
-                        unfinishedVehicles.add(v);
+                        break isFinishedLoop;
                     }
                 }
-                if (unfinishedVehicles.size() < 10) {
-                    System.out.print("");
-                }
-                System.out.println(unfinishedVehicles.size());
                 isAllVehiclesFinished = isFinished;
             }
 
@@ -214,26 +211,45 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
 
             System.out.println("least density threshold " + Routing.least_density_safe_threshold);
 
-/*
+
             //compare paths
-            File file = new File("DEBUG_COSTMAP.txt");
+            File file = new File("dij" + numVehiclesBase);
             BufferedReader reader = new BufferedReader(new FileReader(file));
-            ArrayList<String> dijDiffActualTripTimes = new ArrayList<>();
+            ArrayList<Integer> dijDiffActualTripTimes = new ArrayList<>();
             String value;
             while ((value = reader.readLine()) != null) {
-                dijDiffActualTripTimes.add(value);
+                dijDiffActualTripTimes.add(Integer.parseInt(value));
             }
 
-            ArrayList<String> actualTripTimes = new ArrayList<>();
-            for (Vehicle v : vehicles) {
-                String s = "";
-                for (Road road : v.actualPath) {
-                    s += road.getNodesAsString() + ", ";
+            ArrayList<Integer> actualTripTimes = new ArrayList<>();
+            for (Vehicle v : controller.trackedVehiclesOrdered) {
+                actualTripTimes.add(v.getActualTripTime());
+            }
+
+            ArrayList<Double> dijDiffTripTimes = new ArrayList<>();
+            for (int i = 0; i < controller.trackedVehiclesOrdered.size(); i++) {
+                int actualTripTime = actualTripTimes.get(i);
+                int dijTripTime = dijDiffActualTripTimes.get(i);
+                double diff = 100* (actualTripTime - dijTripTime) / (double) dijTripTime;
+                Vehicle v = controller.trackedVehiclesOrdered.get(i);
+                if (diff > 100) {
+                    System.out.print("");
                 }
-                actualTripTimes.add(s);
+                dijDiffTripTimes.add(diff);
             }
 
+            Collections.sort(dijDiffTripTimes);
+            System.out.println(dijDiffTripTimes);
 
+            double dijDiffTripTimesAvg = AverageUtil.calcAverageDouble(dijDiffTripTimes);
+            System.out.println(dijDiffTripTimesAvg);
+
+            double median = dijDiffTripTimes.get(dijDiffTripTimes.size()/2);
+            System.out.println("median: " + median);
+
+
+
+/*
             if (numVehiclesBase <= 1000) {
                 int totalDiff = 0;
                 for (int i = 0; i < graph.getNodes().size(); i++) {
@@ -263,15 +279,13 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
             }
 
  */
-
-
-/*
-            //append to file
-            writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
-                    + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","
-                    + controller.getProcessingTime() + ", " + Routing.least_density_safe_threshold + "\n");
-            writer.flush();
-*/
+            if (isWrite) {
+                //append to file
+                writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
+                        + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","
+                        + controller.getProcessingTime() + ", " + Routing.least_density_safe_threshold + "\n");
+                writer.flush();
+            }
 
 
         //PRINT OUT WHAT'S GOING WRONG
@@ -296,7 +310,13 @@ if (incrementCount >= controller.ADDEDVEHICLES) {
                 System.out.println();
             }
         }
-
+/*
+        BufferedWriter dijBWriter = new BufferedWriter( new FileWriter("dij" + numVehiclesBase, true));
+        for (Vehicle v : controller.trackedVehiclesOrdered) {
+            dijBWriter.write(v.getActualTripTime() + "\n");
+            dijBWriter.flush();
+        }
+*/
 
             System.out.println("----------------------------");
 /*
