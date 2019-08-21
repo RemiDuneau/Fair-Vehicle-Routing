@@ -16,15 +16,31 @@ public class Routing {
     public static double least_density_safe_threshold = 0.1;
 
     public static boolean isDijkstraDiffThresholdEnabled = true;
-    public static double dijkstra_diff_threshold = 1.2;
+    public static double dijkstra_diff_threshold = 2.0;
 
-    public static boolean enableDynamicRouting = false;
+    public static boolean isDynamicRouting = false;
 
 
+    //used to work out average dijDiff threshold value
+    private static double totalDijkstraDiffThreshold = 0;
+    private static int numTimesLoopedThrough = 0;
 
-    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType) {
-        return dijkstraGeneral(startNode, endNode, nodes, routingType, Integer.MAX_VALUE);
+    public static double getAvgDijDiffThreshold() {
+        return totalDijkstraDiffThreshold / (double) numTimesLoopedThrough;
     }
+
+
+    public static Stack<Road> longTermRouting(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType, double avgUnfairness, double unfairness) {
+
+        //set threshold based on how unfairly this vehicle has been routed compared to the average vehicle. This value will always be between 1 and 2.
+        avgUnfairness = Math.max(avgUnfairness, Double.MIN_VALUE); //avoid dividing by 0.
+        double proportion = (unfairness / avgUnfairness);
+        dijkstra_diff_threshold = 1 + Math.exp( -0.7 * proportion );
+        totalDijkstraDiffThreshold += dijkstra_diff_threshold;
+        numTimesLoopedThrough ++;
+        return dijkstraGeneral(startNode, endNode, nodes, routingType);
+    }
+
 
     /**
      * Finds the least cost path from a given start node to a given end node based on the routing type.
@@ -33,10 +49,9 @@ public class Routing {
      * @param nodes A list of all reachable nodes
      * @param routingType The routing type, which will determine how each path's cost is calculated.
      *                    The routing type constants in the {@code Routing} class should be used here (e.g. {@code TYPE_DIJKSTRA}).
-     * @param dijkstraTripTime the {@code Vehicle}'s {@code dijkstraTripTime} (ensure this is already calculated).
      * @return A least cost path ({@code Stack<Road>}) between the nodes given.
      */
-    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType, int dijkstraTripTime) {
+    public static Stack<Road> dijkstraGeneral(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType) {
 
         //initialisation
         ArrayList<Node> unvisited = new ArrayList<>(nodes);
@@ -50,6 +65,23 @@ public class Routing {
             previousNodeMap.put(node, null);
         }
         costMap.put(startNode, 0.0); //set start node to 0
+
+        //calculate dijkstra estimated time if isDijkstraDiffThreshold
+        int dijkstraEstimatedTime = 0;
+        if (isDijkstraDiffThresholdEnabled) {
+
+            //calc dijkstraEstimatedTime
+            isDijkstraDiffThresholdEnabled = false; //turn off while getting dijPath to prevent infinite loop of getting dijPath.
+            Stack<Road> dijPath = dijkstraGeneral(startNode, endNode, nodes, TYPE_DIJKSTRA);
+            isDijkstraDiffThresholdEnabled = true;
+
+            //loop through path
+            double dijRemainder = 0.0;
+            for (Road rd : dijPath) {
+                dijkstraEstimatedTime += rd.getTimeToTraverse(dijRemainder);
+                dijRemainder = calculateRemainder(rd, true);
+            }
+        }
 
         //loop through nodes
         while (unvisited.size() > 0) {
@@ -78,6 +110,8 @@ public class Routing {
             //calculate if current estimated trip time is greater than dijDiff
             int estimatedTime = 0;
             if (isDijkstraDiffThresholdEnabled) {
+
+                //calc estimated time
                 Stack<Road> currentPath = createStack(currentNode, previousNodeMap);
                 double currentRemainder = 0.0;
                 for (Road rd : currentPath) {
@@ -85,7 +119,8 @@ public class Routing {
                     currentRemainder = calculateRemainder(rd, true);
                 }
             }
-            if (estimatedTime < dijkstraTripTime * dijkstra_diff_threshold) {
+
+            if (estimatedTime <= dijkstraEstimatedTime * dijkstra_diff_threshold) {
 
                 //visit neighbours and add to known nodes
                 for (Node neighbour : currentNode.getNeighbours().keySet()) {

@@ -39,6 +39,9 @@ public class TimeController {
     private int vehiclesSentOut = 0, vehiclesAddedThisIncrement, vehiclesCheckedThisIncrement;
     private double processingTime = 0;
 
+    private boolean isLongTermRouting;
+    private ArrayList<Double> vehicleUnfairnessList = new ArrayList<>();
+
     private ArrayList<Vehicle> tempInactiveVehicles = inactiveVehicles, tempActiveVehicles = activeVehicles;
     private Vehicle vehicleBeingAdded;
 
@@ -62,6 +65,7 @@ public class TimeController {
         moveVehicles();
         removeVehicles();
         updateSpeed();
+        if (isLongTermRouting) updateVehicleUnfairnessList();
     }
 
     /**
@@ -89,29 +93,61 @@ public class TimeController {
                     //calc optimal time
                     Stack<Road> optimalPath = getPathFromRoutingType(Routing.TYPE_DIJKSTRA_NO_CONGESTION, vehicle.getStartNode(), vehicle.getEndNode());
                     vehicle.optimalPath = (Stack<Road>) optimalPath.clone();
-                    double tripTime = 0;
-                    double remainder = 0.0;
+                    double optimalTripTime = 0;
+                    double optimalRemainder = 0.0;
                     for (Road optimalRoad : optimalPath) {
-                        double timeToTraverse = optimalRoad.getTimeToTraverseNoCongestion(remainder);
-                        tripTime += timeToTraverse;
-                        remainder = 1 - (timeToTraverse % 1);
+                        double timeToTraverse = optimalRoad.getTimeToTraverseNoCongestion(optimalRemainder);
+                        optimalTripTime += timeToTraverse;
+                        optimalRemainder = 1 - (timeToTraverse % 1);
                     }
 
-                    vehicle.setOptimalTripTime((int) Math.ceil(tripTime));
+                    vehicle.setOptimalTripTime((int) Math.ceil(optimalTripTime));
+
+                    //calc dijkstra estimate
+                    Stack<Road> dijkstraPath = getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode());
+                    double dijkstraTripTime = 0;
+                    double dijkstraRemainder = 0.0;
+                    for (Road dijRoad : dijkstraPath) {
+                        double timeToTraverse = dijRoad.getTimeToTraverse(dijkstraRemainder);
+                        dijkstraTripTime += timeToTraverse;
+                        dijkstraRemainder = 1 - (timeToTraverse % 1);
+                    }
+
+                    vehicle.setEstimatedDijkstraTime((int) Math.ceil(dijkstraTripTime));
 
                     //future simulation using dijkstra
-                    Stack<Road> path = getPathFromRoutingType(Routing.TYPE_DIJKSTRA, vehicle.getStartNode(), vehicle.getEndNode());
-                    vehicle.dijkstraPath = (Stack<Road>) path.clone();
-                    int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, path);
+                    vehicle.dijkstraPath = (Stack<Road>) dijkstraPath.clone();
+                    int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
                     vehicle.setDijkstraTripTime(dijTime);
 //*/
                 }
 
                 //   VEHICLE ROUTING
                 vehicle.setPath(findPath(vehicle));
+                if (!Routing.isDynamicRouting) vehicle.actualPath = (Stack<Road>) vehicle.getPath().clone();
 
                 //check if path not empty
                 if (vehicle.getPath().size() > 0) {
+
+                    //unfairness stuff
+                    if (SimLoop.isTrackingVehicles && !isFutureSim) {
+                        //estimate trip time
+                        Stack<Road> pathCopy = (Stack<Road>) vehicle.getPath().clone();
+                        double tripTime = 0;
+                        double remainder = 0;
+                        for (Road road : pathCopy) {
+                            double timeToTraverse = road.getTimeToTraverse(remainder);
+                            tripTime += timeToTraverse;
+                            remainder = 1 - (timeToTraverse % 1);
+                        }
+                        vehicle.setEstimatedTripTime((int) Math.ceil(tripTime));
+
+                        //add unfairness based on how different estimated trip time is compared to estimated dijkstra
+                        double proportion = vehicle.getEstimatedTripTime() / (double) vehicle.getEstimatedDijkstraTime();
+                        if (vehicle.getWorstTrip() < proportion) vehicle.setWorstTrip(proportion);
+                        vehicle.setUnfairness(vehicle.getUnfairness() + proportion);
+                    }
+
                     Road road = vehicle.getPath().peek();
 
                     //check if density < 1
@@ -142,6 +178,7 @@ public class TimeController {
         }
     }
 
+
     public Stack<Road> findPath(Vehicle vehicle) {
         return findPath(vehicle, vehicle.getStartNode(), vehicle.getEndNode());
     }
@@ -155,31 +192,25 @@ public class TimeController {
             path = new Stack<>();
         }
 
+        //time how long algo takes if !isFutureSim
         else if (!isFutureSim) {
-            double startTime;
-            double timeTaken;
-            if (Routing.isDijkstraDiffThresholdEnabled && SimLoop.isTrackingVehicles) {
-                startTime = System.nanoTime();
-                path = getPathFromRoutingType(vehicle.getRoutingType(), startNode, endNode, vehicle.getDijkstraTripTime());
-                timeTaken = System.nanoTime() - startTime;
-            }
-            else {
-                startTime = System.nanoTime();
-                path = getPathFromRoutingType(vehicle.getRoutingType(), startNode, endNode);
-                timeTaken = System.nanoTime() - startTime;
-            }
-            processingTime += timeTaken / 1000000.0; //get processingTime in ms
+            double startTime = System.nanoTime();
+            path = (isLongTermRouting) ? getPathFromRoutingType(vehicle.getRoutingType(), startNode, endNode, vehicle.getUnfairness()) : getPathFromRoutingType(vehicle.getRoutingType(), startNode, endNode);
+            double timeTaken = System.nanoTime() - startTime;
+
+            processingTime += timeTaken / 1000000.0; //get time in ms
 
             //if the path is empty and routing type is TYPE_LEAST_DENSITY_SAFE then use LEAST_DENSITY instead
             if (vehicle.getRoutingType() == Routing.TYPE_LEAST_DENSITY_SAFE && vehicle.getPath().size() == 0)
-                path = (Routing.isDijkstraDiffThresholdEnabled && SimLoop.isTrackingVehicles)
-                        ? getPathFromRoutingType(Routing.TYPE_LEAST_DENSITY, startNode, endNode, vehicle.getDijkstraTripTime())
-                        : getPathFromRoutingType(Routing.TYPE_LEAST_DENSITY, startNode, endNode);
+                path = getPathFromRoutingType(Routing.TYPE_LEAST_DENSITY, startNode, endNode);
         }
 
+        /* Should only happen if isFutureSim, and none of the above conditions are met
+         * Note that while in a future simulation, long term routing is ignored to not update vehicle unfairness.
+         */
         else path = getPathFromRoutingType(vehicle.getRoutingType(), startNode, endNode);
 
-        if (!isFutureSim && !path.isEmpty()) vehicle.actualPath.add(path.peek());
+        if (Routing.isDynamicRouting && !isFutureSim && !path.isEmpty()) vehicle.actualPath.add(path.peek());
         if (path.isEmpty()) {
             System.out.print("");
         }
@@ -202,7 +233,7 @@ public class TimeController {
                 vehiclesToRemove.add(vehicle);
                 vehicle.getCurrentRoad().removeVehicle(vehicle);
                 vehicle.resetRoadDistance();
-                vehicle.resetTripDistance();
+                vehicle.setStarted(false);
             }
         }
 
@@ -221,13 +252,20 @@ public class TimeController {
         }
     }
 
+    private void updateVehicleUnfairnessList() {
+        vehicleUnfairnessList.clear();
+        for (Vehicle v : trackedVehicles) {
+            vehicleUnfairnessList.add(v.getUnfairness());
+        }
+    }
+
 
     public int futureSim(Vehicle vehicle, int vehiclesAddedThisIncrement, int totalVehiclesChecked, Stack<Road> path) {
 
         if (path.size() < 1) return Integer.MAX_VALUE;
 
         //enable future sim
-        enableFutureSim();
+        incrementFutureSim();
 
         //clone inactive vehicles
         ArrayList<Vehicle> oldInactiveVehicles = tempInactiveVehicles;
@@ -320,7 +358,7 @@ public class TimeController {
         //reset vehicle lists
         tempActiveVehicles = oldActiveVehicles;
         tempInactiveVehicles = oldInactiveVehicles;
-        disableFutureSim();
+        decrementFutureSim();
 
         if (vehicleCopy.isFinished()) return vehicleCopy.getActualTripTime();
 
@@ -335,10 +373,10 @@ public class TimeController {
             }
             return vehicleCopy.getActualTripTime() + (int) Math.ceil(extraTime);
         }
-        //else return Integer.MAX_VALUE;
     }
 
 
+    //for debugging
     private void checkDensities(int vehiclesAdded) {
         if (SimLoop.getIncrementCount() == ADDEDVEHICLES && vehiclesAdded == INCREMENT) {
             for (int i = 0; i < roads.size(); i++) {
@@ -348,20 +386,21 @@ public class TimeController {
         }
     }
 
-
     public Stack<Road> getPathFromRoutingType(int routingType, Node startNode, Node endNode) {
-        return getPathFromRoutingType(routingType, startNode, endNode, Integer.MAX_VALUE);
+        return getPathFromRoutingType(routingType, startNode, endNode, 0);
     }
 
-
-    public Stack<Road> getPathFromRoutingType(int routingType, Node startNode, Node endNode, int dijkstraTripTime) {
+    public Stack<Road> getPathFromRoutingType(int routingType, Node startNode, Node endNode, double unfairness) {
         Stack<Road> path;
         switch (routingType) {
+
+            //NOT ADAPTED FOR LONG TERM ROUTING
             case Routing.TYPE_FUTURE_FASTEST:
                 Stack<Road> pathFutureTime = Routing.future(startNode, endNode, this, false);
                 path = pathFutureTime;
                 break;
 
+            //NOT ADAPTED FOR LONG TERM ROUTING
             case Routing.TYPE_FUTURE_LEAST_DENSITY:
                 Stack<Road> pathFutureDensity = Routing.future(startNode, endNode, this, true);
                 path = pathFutureDensity;
@@ -371,9 +410,50 @@ public class TimeController {
                 throw new IllegalStateException("Unexpected value: " + routingType + ". This routing type cannot be assigned a path.");
 
             default:
-                path = Routing.dijkstraGeneral(startNode, endNode, nodes, routingType, dijkstraTripTime);
+                path  = (isLongTermRouting)
+                        ? Routing.longTermRouting(startNode, endNode, nodes, routingType, ListsUtil.calcAverageDouble(vehicleUnfairnessList), unfairness)
+                        : Routing.dijkstraGeneral(startNode, endNode, nodes, routingType);
         }
         return path;
+    }
+
+    /**
+     * Resets elements of vehicle lists, roads and vehicles so they can perform more trips.
+     */
+    public void resetForNextDay() {
+        resetVehicleLists();
+        resetRoads();
+        resetVehicles();
+    }
+
+    /**
+     * clears {@Code inactiveVehicles} and {@Code activeVehicles}, and repopulates inactive vehicles using the {@Code vehicles} array.
+     */
+    private void resetVehicleLists() {
+        inactiveVehicles.clear();
+        activeVehicles.clear();
+        trackedVehicles.clear();
+        for (Vehicle v : vehicles) {
+            inactiveVehicles.add(v);
+        }
+
+        tempInactiveVehicles = inactiveVehicles;
+        tempActiveVehicles = activeVehicles;
+    }
+
+    private void resetRoads() {
+        for (Road road : roads) {
+            road.getVehicles().clear();
+            road.calculateCurrentSpeed();
+        }
+    }
+
+    private void resetVehicles() {
+        for (Vehicle v : vehicles) {
+            v.setFinished(false);
+            v.setActualTripTime(0);
+            v.resetTripDistance();
+        }
     }
 
 
@@ -427,6 +507,10 @@ public class TimeController {
         return trackedVehicles;
     }
 
+    public ArrayList<Double> getVehicleUnfairnessList() {
+        return vehicleUnfairnessList;
+    }
+
     public ArrayList<Node> getNodes() {
         return nodes;
     }
@@ -456,17 +540,25 @@ public class TimeController {
     }
 
 
-    public void enableFutureSim() {
+    public void incrementFutureSim() {
         futureSimCounter++;
         isFutureSim = true;
     }
 
-    public void disableFutureSim() {
+    public void decrementFutureSim() {
         futureSimCounter--;
         if (futureSimCounter == 0) isFutureSim = false;
     }
 
     public double getProcessingTime() {
         return processingTime;
+    }
+
+    public boolean isLongTermRouting() {
+        return isLongTermRouting;
+    }
+
+    public void setLongTermRouting(boolean longTermRouting) {
+        isLongTermRouting = longTermRouting;
     }
 }

@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.EmptyStackException;
 import java.util.Stack;
 public class Vehicle implements Cloneable {
 
@@ -25,7 +23,7 @@ public class Vehicle implements Cloneable {
     public Vehicle () {}
 
 
-    //DELETE LATER!!!!
+    //DELETE LATER!!!! :)
     public Stack<Road> actualPath = new Stack<>();
     public Stack<Road> dijkstraPath;
     public Stack<Road> optimalPath;
@@ -37,8 +35,9 @@ public class Vehicle implements Cloneable {
     private Node startNode, endNode;
     private Stack<Road> path;
     private Road currentRoad;
-    private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, unfairnessScore, tripsFinished = 0,
-            optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0;
+    private double unfairness = 0, worstTrip = 0;
+    private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, tripsFinished = 0,
+            optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0, totalTripTime = 0, estimatedDijkstraTime = 0, estimatedTripTime;
     private boolean isFinished = false, isStarted = false, isDynamicRouting;
 
     private TimeController controller;
@@ -65,6 +64,7 @@ public class Vehicle implements Cloneable {
 
     public void move() {
         actualTripTime++;
+        totalTripTime++;
         int oldRoadLength = currentRoad.getLength();
 
         //check if move onto new road
@@ -187,8 +187,20 @@ public class Vehicle implements Cloneable {
         this.routingType = routingType;
     }
 
-    public int getUnfairnessScore() {
-        return unfairnessScore;
+    public double getUnfairness() {
+        return unfairness;
+    }
+
+    public void setUnfairness(double unfairness) {
+        this.unfairness = unfairness;
+    }
+
+    public double getWorstTrip() {
+        return worstTrip;
+    }
+
+    public void setWorstTrip(double worstTrip) {
+        this.worstTrip = worstTrip;
     }
 
     public void setPath(Stack<Road> path) {
@@ -249,6 +261,34 @@ public class Vehicle implements Cloneable {
 
     public int getActualTripTime() {
         return actualTripTime;
+    }
+
+    public void setActualTripTime(int actualTripTime) {
+        this.actualTripTime = actualTripTime;
+    }
+
+    public int getTotalTripTime() {
+        return totalTripTime;
+    }
+
+    public void setTotalTripTime(int totalTripTime) {
+        this.totalTripTime = totalTripTime;
+    }
+
+    public int getEstimatedDijkstraTime() {
+        return estimatedDijkstraTime;
+    }
+
+    public int getEstimatedTripTime() {
+        return estimatedTripTime;
+    }
+
+    public void setEstimatedTripTime(int estimatedTripTime) {
+        this.estimatedTripTime = estimatedTripTime;
+    }
+
+    public void setEstimatedDijkstraTime(int estimatedDijkstraTime) {
+        this.estimatedDijkstraTime = estimatedDijkstraTime;
     }
 
     public boolean isDynamicRouting() {
