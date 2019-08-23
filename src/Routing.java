@@ -35,10 +35,18 @@ public class Routing {
         //set threshold based on how unfairly this vehicle has been routed compared to the average vehicle. This value will always be between 1 and 2.
         avgUnfairness = Math.max(avgUnfairness, Double.MIN_VALUE); //avoid dividing by 0.
         double proportion = (unfairness / avgUnfairness);
-        dijkstra_diff_threshold = 1 + Math.exp( -0.7 * proportion );
+            dijkstra_diff_threshold = 1 + 0.5 * Math.exp( -0.9 * proportion );
+        return dijkstraGeneral(startNode, endNode, nodes, routingType);
+    }
+
+    public static void updateDijkstra_diff_thresholdStats() {
         totalDijkstraDiffThreshold += dijkstra_diff_threshold;
         numTimesLoopedThrough ++;
-        return dijkstraGeneral(startNode, endNode, nodes, routingType);
+    }
+
+    public static void resetDijkstra_diff_thresholdStats() {
+        totalDijkstraDiffThreshold = 0;
+        numTimesLoopedThrough = 0;
     }
 
 

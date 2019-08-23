@@ -117,8 +117,8 @@ public class TimeController {
 
                     //future simulation using dijkstra
                     vehicle.dijkstraPath = (Stack<Road>) dijkstraPath.clone();
-                    int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
-                    vehicle.setDijkstraTripTime(dijTime);
+                    //int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
+                    //vehicle.setDijkstraTripTime(dijTime);
 //*/
                 }
 
@@ -130,7 +130,7 @@ public class TimeController {
                 if (vehicle.getPath().size() > 0) {
 
                     //unfairness stuff
-                    if (SimLoop.isTrackingVehicles && !isFutureSim) {
+                    if (!isFutureSim) {
                         //estimate trip time
                         Stack<Road> pathCopy = (Stack<Road>) vehicle.getPath().clone();
                         double tripTime = 0;
@@ -146,6 +146,10 @@ public class TimeController {
                         double proportion = vehicle.getEstimatedTripTime() / (double) vehicle.getEstimatedDijkstraTime();
                         if (vehicle.getWorstTrip() < proportion) vehicle.setWorstTrip(proportion);
                         vehicle.setUnfairness(vehicle.getUnfairness() + proportion);
+                        if (vehicle.getUnfairness() > Double.MAX_VALUE - 20) {
+                            System.out.print("");
+                        }
+                        Routing.updateDijkstra_diff_thresholdStats();
                     }
 
                     Road road = vehicle.getPath().peek();
@@ -255,7 +259,8 @@ public class TimeController {
     private void updateVehicleUnfairnessList() {
         vehicleUnfairnessList.clear();
         for (Vehicle v : trackedVehicles) {
-            vehicleUnfairnessList.add(v.getUnfairness());
+            if (v.getUnfairness() < Double.MAX_VALUE)
+                vehicleUnfairnessList.add(v.getUnfairness());
         }
     }
 

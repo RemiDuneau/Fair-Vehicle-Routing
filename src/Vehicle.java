@@ -279,16 +279,16 @@ public class Vehicle implements Cloneable {
         return estimatedDijkstraTime;
     }
 
+    public void setEstimatedDijkstraTime(int estimatedDijkstraTime) {
+        this.estimatedDijkstraTime = estimatedDijkstraTime;
+    }
+
     public int getEstimatedTripTime() {
         return estimatedTripTime;
     }
 
     public void setEstimatedTripTime(int estimatedTripTime) {
         this.estimatedTripTime = estimatedTripTime;
-    }
-
-    public void setEstimatedDijkstraTime(int estimatedDijkstraTime) {
-        this.estimatedDijkstraTime = estimatedDijkstraTime;
     }
 
     public boolean isDynamicRouting() {
