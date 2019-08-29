@@ -4,7 +4,7 @@ import java.util.*;
 public class SimLoop {
 
     public static int NUM_ITERATIONS = 100, INIT_ITERATIONS = 50;
-    private static int LONG_TERM_ROUTING_NUM_TRIPS = 7;
+    private static int LONG_TERM_ROUTING_NUM_TRIPS = 14;
     public static boolean isTrackingVehicles = false;
 
 
@@ -14,25 +14,25 @@ public class SimLoop {
         return incrementCount;
     }
 
-    public static boolean isLongTermRouting = true;
+    public static boolean isLongTermRouting = false;
 
 
     public static void main(String[] args) throws IOException {
-        FileWriter fileWriter = new FileWriter("longTermStatic.csv", true);
+        FileWriter fileWriter = new FileWriter("results.csv", true);
         BufferedWriter writer = new BufferedWriter(fileWriter);
-        boolean isWrite = false;
+        boolean isWrite = true;
 
-        int[] routingTypes = {2};
+        int[] routingTypes = {6};
         for (int type = 0; type < routingTypes.length; type++) {
 
             //tracking stats
-            double avgTimeTakenToFinishTrip = 0;
 
             int routingType = routingTypes[type];
             int initial = 500;
             int numCycles = 9;
             int vehiclesIncrement = 250;
             for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
+                double longTermTimeToFinishTrip = 0;
                 System.out.println("TRACKED VEHICLES: " + numVehiclesBase);
 
                 //init variables
@@ -115,8 +115,8 @@ public class SimLoop {
                             totalDensityPerIteration += road.getDensity();
                         }
 
-                        //System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size()
-                        //        + ") (DijDiff Threshold: " + Routing.dijkstra_diff_threshold + ") (Avg unfairness: " + ListsUtil.calcAverageDouble(controller.getVehicleUnfairnessList()) + ")");
+                        System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size()
+                                + ") (DijDiff Threshold: " + Routing.dijkstra_diff_threshold + ") (Avg unfairness: " + ListsUtil.calcAverageDouble(controller.getVehicleUnfairnessList()) + ")");
                     }
 
                     //keep incrementing time until all tracked vehicles are finished
@@ -162,7 +162,8 @@ public class SimLoop {
 
 
                     //average trips
-                    avgTimeTakenToFinishTrip = totalTimeTakenToFinishTrip / (double) numFinishedTrips;
+                    double avgTimeTakenToFinishTrip = totalTimeTakenToFinishTrip / (double) numFinishedTrips;
+                    longTermTimeToFinishTrip += avgTimeTakenToFinishTrip;
 
                     System.out.println("Average time taken to complete a trip: " + avgTimeTakenToFinishTrip + "(proportion of trips finished: " + proportionOfFinishedTrips + ")");
                     double avgDistance = totalDistance / (double) nTrackedVehicles;
@@ -226,7 +227,7 @@ public class SimLoop {
                     double dijDiffAverage = ListsUtil.calcAverageDouble(dijkstraTimeDifferenceList);
                     //System.out.println("dijTimeDiff avg " + dijDiffAverage);
 
-                    ArrayList<Double> dijTimDifferenceWorst10Pct = (ArrayList<Double>) ListsUtil.findWorstNPercent(0.9, optimalTimeDifferenceList);
+                    ArrayList<Double> dijTimDifferenceWorst10Pct = (ArrayList<Double>) ListsUtil.findWorstNPercent(0.9, dijkstraTimeDifferenceList);
                     double dijDiffWorst10PctAvg = ListsUtil.calcAverageDouble(dijTimDifferenceWorst10Pct);
                     //System.out.println("worst 10% average: " + dijTimDifferenceWorst10Pct);
 
@@ -390,13 +391,16 @@ public class SimLoop {
                 double dijDiffAvg = ListsUtil.calcAverageDouble(dijDiffLongTermAverageList);
                 ArrayList<Double> dijDiffWorst10PctList = ListsUtil.findWorstNPercent(0.9, dijDiffLongTermAverageList);
                 double dijDiffWorst10PctAvg = ListsUtil.calcAverageDouble(dijDiffWorst10PctList);
+
+                double longTermAvgTimeToFinishTrip = longTermTimeToFinishTrip/(double)nTrips;
+                System.out.println("Avg time to finish trip: " + longTermAvgTimeToFinishTrip);
                 System.out.println("Avg unfairness " + avgUnfairness + " (Worst 10%: " + avgUnfairnessWorst10Pct + ")");
                 System.out.println("avg worst trip: " + avgWorstTrip);
 
 
                 //WRITE TO FILE
                 if (isWrite && isLongTermRouting) {
-                    writer.write(routingType + ", " + numVehiclesBase + ", " + nTrips + ", " + avgTimeTakenToFinishTrip + ", " + dijDiffAvg + ", "
+                    writer.write(routingType + ", " + numVehiclesBase + ", " + nTrips + ", " + longTermAvgTimeToFinishTrip + ", " + dijDiffAvg + ", "
                             + dijDiffWorst10PctAvg + ", " + avgUnfairness + ", " + avgUnfairnessWorst10Pct + ", " + avgWorstTrip + ", " + avgDijDiffThreshold + "\n");
                     writer.flush();
                 }

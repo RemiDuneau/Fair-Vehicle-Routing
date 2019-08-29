@@ -117,8 +117,8 @@ public class TimeController {
 
                     //future simulation using dijkstra
                     vehicle.dijkstraPath = (Stack<Road>) dijkstraPath.clone();
-                    //int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
-                    //vehicle.setDijkstraTripTime(dijTime);
+                    int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
+                    vehicle.setDijkstraTripTime(dijTime);
 //*/
                 }
 

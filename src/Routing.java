@@ -9,13 +9,14 @@ public class Routing {
     public static final int TYPE_LEAST_DENSITY_SAFE = 3;
     public static final int TYPE_LEAST_DENSITY_ROAD_LENGTH = 4;
     public static final int TYPE_LEAST_DENSITY_EXPONENTIAL = 5;
-    public static final int TYPE_GREATEST_SPEED_ROAD_LENGTH = 6;
+    public static final int TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA = 6;
+    public static final int TYPE_GREATEST_SPEED_ROAD_LENGTH = 7;
     public static final int TYPE_FUTURE_FASTEST = 10;
     public static final int TYPE_FUTURE_LEAST_DENSITY = 11;
 
     public static double least_density_safe_threshold = 0.1;
 
-    public static boolean isDijkstraDiffThresholdEnabled = true;
+    public static boolean isDijkstraDiffThresholdEnabled = false;
     public static double dijkstra_diff_threshold = 2.0;
 
     public static boolean isDynamicRouting = false;
@@ -32,10 +33,10 @@ public class Routing {
 
     public static Stack<Road> longTermRouting(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType, double avgUnfairness, double unfairness) {
 
-        //set threshold based on how unfairly this vehicle has been routed compared to the average vehicle. This value will always be between 1 and 2.
+        //set threshold based on how unfairly this vehicle has been routed compared to the average vehicle.
         avgUnfairness = Math.max(avgUnfairness, Double.MIN_VALUE); //avoid dividing by 0.
         double proportion = (unfairness / avgUnfairness);
-            dijkstra_diff_threshold = 1 + 0.5 * Math.exp( -0.9 * proportion );
+            dijkstra_diff_threshold = 1 + Math.exp( -0.7 * proportion );
         return dijkstraGeneral(startNode, endNode, nodes, routingType);
     }
 
@@ -136,6 +137,7 @@ public class Routing {
                         Road road = currentNode.getRoad(neighbour);
                         double cost = Double.MAX_VALUE;
                         double remainder;
+                        double density = road.calculateDensity();
 
 
                         //determine what the cost is based on routing type
@@ -152,9 +154,8 @@ public class Routing {
                                 break;
 
                             case TYPE_LEAST_DENSITY:
-                                double least_densityDensity = road.calculateDensity();
-                                if (least_densityDensity < Road.MAX_DENSITY)
-                                    cost = costMap.get(currentNode) + least_densityDensity;
+                                if (density < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + density;
                                 break;
 
                             case TYPE_LEAST_DENSITY_SAFE:
@@ -175,20 +176,24 @@ public class Routing {
                                 break;
 
                             case TYPE_LEAST_DENSITY_ROAD_LENGTH:
-                                double least_density_road_lengthDensity = road.calculateDensity();
-                                if (least_density_road_lengthDensity < Road.MAX_DENSITY)
-                                    cost = costMap.get(currentNode) + least_density_road_lengthDensity * road.getLength();
+                                if (density < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + density * road.getLength();
                                 break;
 
                             case TYPE_LEAST_DENSITY_EXPONENTIAL:
-                                double least_density_exponentialDensity = road.calculateDensity();
-                                if (least_density_exponentialDensity < Road.MAX_DENSITY)
-                                    cost = costMap.get(currentNode) + Math.exp(least_density_exponentialDensity);
+                                if (density < Road.MAX_DENSITY)
+                                    cost = costMap.get(currentNode) + Math.exp(density);
+                                break;
+
+                            case TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA:
+                                if (density < Road.MAX_DENSITY) {
+                                    cost = costMap.get(currentNode) + Math.exp(density) * road.getTimeToTraverse(0);
+                                }
                                 break;
 
                             case TYPE_GREATEST_SPEED_ROAD_LENGTH:
                                 double greatest_speed_road_lengthSpeed = 1 / (double) road.calculateCurrentSpeed();
-                                if (road.getDensity() < Road.MAX_DENSITY)
+                                if (density < Road.MAX_DENSITY)
                                     cost = costMap.get(currentNode) + greatest_speed_road_lengthSpeed * road.getLength();
                                 break;
 
