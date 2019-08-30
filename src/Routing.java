@@ -10,16 +10,24 @@ public class Routing {
     public static final int TYPE_LEAST_DENSITY_ROAD_LENGTH = 4;
     public static final int TYPE_LEAST_DENSITY_EXPONENTIAL = 5;
     public static final int TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA = 6;
-    public static final int TYPE_GREATEST_SPEED_ROAD_LENGTH = 7;
+    public static final int TYPE_LEAST_DENSITY_WITH_DIJKSTRA = 7;
+    public static final int TYPE_GREATEST_SPEED_ROAD_LENGTH = 9;
     public static final int TYPE_FUTURE_FASTEST = 10;
     public static final int TYPE_FUTURE_LEAST_DENSITY = 11;
 
     public static double least_density_safe_threshold = 0.1;
 
-    public static boolean isDijkstraDiffThresholdEnabled = false;
-    public static double dijkstra_diff_threshold = 2.0;
+    public static boolean isDijkstraDiffThresholdEnabled = true;
+    public static double dijkstra_diff_threshold = 1.2;
 
+    public static boolean isLongTermRouting = true;
     public static boolean isDynamicRouting = false;
+
+
+    private static final int LONG_TERM_ROUTING_DIJDIFF = 0;
+    private static final int LONG_TERM_ROUTING_PROBABILITY = 1;
+    private static int longTermRoutingType = LONG_TERM_ROUTING_DIJDIFF;
+    private static Random r = new Random(13579);
 
 
     //used to work out average dijDiff threshold value
@@ -32,12 +40,28 @@ public class Routing {
 
 
     public static Stack<Road> longTermRouting(Node startNode, Node endNode, ArrayList<Node> nodes, int routingType, double avgUnfairness, double unfairness) {
-
-        //set threshold based on how unfairly this vehicle has been routed compared to the average vehicle.
         avgUnfairness = Math.max(avgUnfairness, Double.MIN_VALUE); //avoid dividing by 0.
         double proportion = (unfairness / avgUnfairness);
-            dijkstra_diff_threshold = 1 + Math.exp( -0.7 * proportion );
-        return dijkstraGeneral(startNode, endNode, nodes, routingType);
+        switch (longTermRoutingType) {
+
+            //CHANGE DIJDIFF THRESHOLD
+            case LONG_TERM_ROUTING_DIJDIFF:
+                //set threshold based on how unfairly this vehicle has been routed compared to the average vehicle.
+                dijkstra_diff_threshold = 1 + 0.5 * Math.exp( -0.9 * proportion );
+                return dijkstraGeneral(startNode, endNode, nodes, routingType);
+
+            //CHANGE PROBABILITY OF TAKING DIJKSTRA
+            case LONG_TERM_ROUTING_PROBABILITY:
+                //set probability of taking dijkstra based on vehicle unfairness compared to average unfairness
+                double probability = Math.max(0, Math.min( 1, 0.8 * Math.pow(proportion, 0.5) - 0.4) );
+                //double probability = Math.max(0, Math.min( 1, 1 - Math.exp(-0.7 * proportion) ) );
+                if (r.nextDouble() > probability)
+                    return dijkstraGeneral(startNode, endNode, nodes, routingType);
+                else return dijkstraGeneral(startNode, endNode, nodes, TYPE_DIJKSTRA);
+
+            default:
+                throw new IllegalStateException("Unexpected value: " + longTermRoutingType);
+        }
     }
 
     public static void updateDijkstra_diff_thresholdStats() {
@@ -187,7 +211,15 @@ public class Routing {
 
                             case TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA:
                                 if (density < Road.MAX_DENSITY) {
-                                    cost = costMap.get(currentNode) + Math.exp(density) * road.getTimeToTraverse(0);
+                                    remainder = calculateRemainder(currentNode, previousNodeMap, true);
+                                    cost = costMap.get(currentNode) + Math.exp(density) * road.getTimeToTraverse(remainder);
+                                }
+                                break;
+
+                            case TYPE_LEAST_DENSITY_WITH_DIJKSTRA:
+                                if (density < Road.MAX_DENSITY) {
+                                    remainder = calculateRemainder(currentNode, previousNodeMap, true);
+                                    cost = costMap.get(currentNode) + density * road.getTimeToTraverse(remainder);
                                 }
                                 break;
 

@@ -38,7 +38,7 @@ public class Vehicle implements Cloneable {
     private double unfairness = 0, worstTrip = 0;
     private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, tripsFinished = 0,
             optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0, totalTripTime = 0, estimatedDijkstraTime = 0, estimatedTripTime;
-    private boolean isFinished = false, isStarted = false, isDynamicRouting;
+    private boolean isFinished = false, isStarted = false, isDynamicRouting, isDijkstraOnly = false;
 
     private TimeController controller;
 
@@ -301,5 +301,13 @@ public class Vehicle implements Cloneable {
 
     public void setTimeController(TimeController controller) {
         this.controller = controller;
+    }
+
+    public boolean isDijkstraOnly() {
+        return isDijkstraOnly;
+    }
+
+    public void setDijkstraOnly(boolean dijkstraOnly) {
+        isDijkstraOnly = dijkstraOnly;
     }
 }

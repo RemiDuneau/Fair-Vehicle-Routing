@@ -30,9 +30,11 @@ public class TimeController {
     }
 
     private Vehicle[] vehicles = new Vehicle[NUM_VEHICLES];
-    private ArrayList<Vehicle> inactiveVehicles = new ArrayList(NUM_VEHICLES);
-    private ArrayList<Vehicle> activeVehicles = new ArrayList<>();
-    private ArrayList<Vehicle> trackedVehicles = new ArrayList<>();
+    private ArrayList<Vehicle> inactiveVehicles = new ArrayList(NUM_VEHICLES),
+            activeVehicles = new ArrayList<>(),
+            trackedVehicles = new ArrayList<>(),
+            dijkstraOnlyTrackedVehicles = new ArrayList<>(),
+            unfairnessTrackedVehicles = new ArrayList<>();
     private ArrayList<Node> nodes;
     private ArrayList<Road> roads;
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
@@ -40,8 +42,8 @@ public class TimeController {
     private double processingTime = 0;
 
     private boolean isLongTermRouting;
-    private ArrayList<Double> vehicleUnfairnessList = new ArrayList<>();
-
+    private ArrayList<Double> trackedVehicleUnfairnessList = new ArrayList<>();
+    private Map<Vehicle, Double> vehicleUnfairnessMap = new HashMap<>();
     private ArrayList<Vehicle> tempInactiveVehicles = inactiveVehicles, tempActiveVehicles = activeVehicles;
     private Vehicle vehicleBeingAdded;
 
@@ -65,7 +67,7 @@ public class TimeController {
         moveVehicles();
         removeVehicles();
         updateSpeed();
-        if (isLongTermRouting) updateVehicleUnfairnessList();
+        if (isLongTermRouting) updateTrackedVehicleUnfairnessList();
     }
 
     /**
@@ -117,8 +119,8 @@ public class TimeController {
 
                     //future simulation using dijkstra
                     vehicle.dijkstraPath = (Stack<Road>) dijkstraPath.clone();
-                    int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
-                    vehicle.setDijkstraTripTime(dijTime);
+                    //int dijTime = futureSim(vehicle, vehiclesAdded, vehiclesChecked, dijkstraPath);
+                    //vehicle.setDijkstraTripTime(dijTime);
 //*/
                 }
 
@@ -130,7 +132,7 @@ public class TimeController {
                 if (vehicle.getPath().size() > 0) {
 
                     //unfairness stuff
-                    if (!isFutureSim) {
+                    if (!isFutureSim && !vehicle.isDijkstraOnly()) {
                         //estimate trip time
                         Stack<Road> pathCopy = (Stack<Road>) vehicle.getPath().clone();
                         double tripTime = 0;
@@ -146,9 +148,8 @@ public class TimeController {
                         double proportion = vehicle.getEstimatedTripTime() / (double) vehicle.getEstimatedDijkstraTime();
                         if (vehicle.getWorstTrip() < proportion) vehicle.setWorstTrip(proportion);
                         vehicle.setUnfairness(vehicle.getUnfairness() + proportion);
-                        if (vehicle.getUnfairness() > Double.MAX_VALUE - 20) {
-                            System.out.print("");
-                        }
+                        if (vehicle.getUnfairness() < Double.MAX_VALUE)
+                            vehicleUnfairnessMap.put(vehicle, vehicle.getUnfairness());
                         Routing.updateDijkstra_diff_thresholdStats();
                     }
 
@@ -156,10 +157,8 @@ public class TimeController {
 
                     //check if density < 1
                     if (road.getDensity() < Road.MAX_DENSITY) {
-                        if (SimLoop.isTrackingVehicles && !isFutureSim) {
+                        if (SimLoop.isTrackingVehicles && !isFutureSim)
                             vehiclesSentOut++;
-                            trackedVehicles.add(vehicle);
-                        }
                         tempActiveVehicles.add(vehicle);
                         vehicle.setStarted(true);
 
@@ -256,11 +255,11 @@ public class TimeController {
         }
     }
 
-    private void updateVehicleUnfairnessList() {
-        vehicleUnfairnessList.clear();
+    private void updateTrackedVehicleUnfairnessList() {
+        trackedVehicleUnfairnessList.clear();
         for (Vehicle v : trackedVehicles) {
             if (v.getUnfairness() < Double.MAX_VALUE)
-                vehicleUnfairnessList.add(v.getUnfairness());
+                trackedVehicleUnfairnessList.add(v.getUnfairness());
         }
     }
 
@@ -416,7 +415,7 @@ public class TimeController {
 
             default:
                 path  = (isLongTermRouting)
-                        ? Routing.longTermRouting(startNode, endNode, nodes, routingType, ListsUtil.calcAverageDouble(vehicleUnfairnessList), unfairness)
+                        ? Routing.longTermRouting(startNode, endNode, nodes, routingType, ListsUtil.calcAverageDouble(vehicleUnfairnessMap.values()), unfairness)
                         : Routing.dijkstraGeneral(startNode, endNode, nodes, routingType);
         }
         return path;
@@ -437,7 +436,6 @@ public class TimeController {
     private void resetVehicleLists() {
         inactiveVehicles.clear();
         activeVehicles.clear();
-        trackedVehicles.clear();
         for (Vehicle v : vehicles) {
             inactiveVehicles.add(v);
         }
@@ -462,7 +460,7 @@ public class TimeController {
     }
 
 
-    public void createRandomNodeVehicles() {
+    public void createRandomNodeVehicles(boolean isDijkstraOnly) {
         for (int i = 0; i < NUM_VEHICLES; i++) {
             Vehicle vehicle = new Vehicle();
             vehicles[i] = vehicle;
@@ -487,9 +485,24 @@ public class TimeController {
             vehicle.setEndNode(endNode);
         }
 
+        if (isDijkstraOnly) setVehiclesDijkstraOnly(SimLoop.DIJKSTRA_ONLY_PROPORTION);
+
         int initial = MAX_VEHICLES_ADDED_PER_TIME_INCREMENT*SimLoop.INIT_ITERATIONS;
         for (int n = initial; n < initial + MAX_VEHICLES_ADDED_PER_TIME_INCREMENT*SimLoop.NUM_ITERATIONS; n++) {
-            trackedVehiclesOrdered.add(vehicles[n]);
+            Vehicle v = vehicles[n];
+            trackedVehiclesOrdered.add(v);
+            if (v.isDijkstraOnly())
+                dijkstraOnlyTrackedVehicles.add(v);
+            else trackedVehicles.add(v);
+        }
+    }
+
+    public void setVehiclesDijkstraOnly(double proportion) {
+        Random r = new Random(654321);
+        for (Vehicle v : vehicles) {
+            if (r.nextDouble() < proportion) {
+                v.setDijkstraOnly(true);
+            }
         }
     }
 
@@ -512,8 +525,12 @@ public class TimeController {
         return trackedVehicles;
     }
 
-    public ArrayList<Double> getVehicleUnfairnessList() {
-        return vehicleUnfairnessList;
+    public ArrayList<Vehicle> getDijkstraOnlyTrackedVehicles() {
+        return dijkstraOnlyTrackedVehicles;
+    }
+
+    public ArrayList<Double> getTrackedVehicleUnfairnessList() {
+        return trackedVehicleUnfairnessList;
     }
 
     public ArrayList<Node> getNodes() {

@@ -5,6 +5,7 @@ public class SimLoop {
 
     public static int NUM_ITERATIONS = 100, INIT_ITERATIONS = 50;
     private static int LONG_TERM_ROUTING_NUM_TRIPS = 14;
+    public static double DIJKSTRA_ONLY_PROPORTION = 0.1;
     public static boolean isTrackingVehicles = false;
 
 
@@ -14,20 +15,17 @@ public class SimLoop {
         return incrementCount;
     }
 
-    public static boolean isLongTermRouting = false;
-
 
     public static void main(String[] args) throws IOException {
-        FileWriter fileWriter = new FileWriter("results.csv", true);
-        BufferedWriter writer = new BufferedWriter(fileWriter);
-        boolean isWrite = true;
+        for (double proportion = 0.1; proportion < 1; proportion+=0.1) {
+            FileWriter fileWriter = new FileWriter("longTermDijOnly" + (int)proportion*100 + ".csv", true);
+            BufferedWriter writer = new BufferedWriter(fileWriter);
+            boolean isWrite = true;
+            int[] routingTypes = {6};
 
-        int[] routingTypes = {6};
-        for (int type = 0; type < routingTypes.length; type++) {
-
-            //tracking stats
-
-            int routingType = routingTypes[type];
+            DIJKSTRA_ONLY_PROPORTION = proportion;
+            //int routingType = routingTypes[type];
+            int routingType = routingTypes[0];
             int initial = 500;
             int numCycles = 9;
             int vehiclesIncrement = 250;
@@ -40,20 +38,23 @@ public class SimLoop {
                 TimeController.NUM_VEHICLES = (numVehicles);
                 Graph graph = XMLParser.parseXML(new File("Berlin Example.xml"));
                 TimeController controller = new TimeController(graph);
-                controller.createRandomNodeVehicles();
+                controller.createRandomNodeVehicles(true);
                 Vehicle[] vehicles = controller.getVehicles();
                 ArrayList<Vehicle> trackedVehicles = controller.getTrackedVehicles();
+                ArrayList<Vehicle> dijkstraOnlyTrackedVehicles = controller.getDijkstraOnlyTrackedVehicles();
                 ArrayList<Vehicle> activeVehicles = controller.getActiveVehicles();
                 Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = controller.getAllPathsMap();
                 ArrayList<Road> roads = controller.getRoads();
                 ArrayList<ArrayList<Double>> dijDiffLists = new ArrayList();
 
-                controller.setLongTermRouting(isLongTermRouting);
+                controller.setLongTermRouting(Routing.isLongTermRouting);
                 Routing.resetDijkstra_diff_thresholdStats();
 
                 //find all paths from every vehicle's start node to end node
                 for (Vehicle v : vehicles) {
-                    v.setRoutingType(routingType);
+                    if (v.isDijkstraOnly())
+                        v.setRoutingType(Routing.TYPE_DIJKSTRA);
+                    else v.setRoutingType(routingType);
 
                     if (Routing.isDynamicRouting) {
                         v.setDynamicRouting(true);
@@ -75,7 +76,7 @@ public class SimLoop {
                 }
 
                 int nTrips = 1;
-                if (isLongTermRouting) nTrips = LONG_TERM_ROUTING_NUM_TRIPS;
+                if (Routing.isLongTermRouting) nTrips = LONG_TERM_ROUTING_NUM_TRIPS;
                 for (int day = 0; day < nTrips; day++) {
                     System.out.println("DAY: " + day);
                     controller.resetForNextDay();
@@ -115,8 +116,8 @@ public class SimLoop {
                             totalDensityPerIteration += road.getDensity();
                         }
 
-                        System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size()
-                                + ") (DijDiff Threshold: " + Routing.dijkstra_diff_threshold + ") (Avg unfairness: " + ListsUtil.calcAverageDouble(controller.getVehicleUnfairnessList()) + ")");
+                        //System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size()
+                        //        + ") (DijDiff Threshold: " + Routing.dijkstra_diff_threshold + ") (Avg unfairness: " + ListsUtil.calcAverageDouble(controller.getTrackedVehicleUnfairnessList()) + ")");
                     }
 
                     //keep incrementing time until all tracked vehicles are finished
@@ -306,7 +307,7 @@ public class SimLoop {
                 }
 
      */
-                    if (isWrite && !isLongTermRouting) {
+                    if (isWrite && !Routing.isLongTermRouting) {
                         //append to file
                         writer.write(routingType + ", " + numVehicles + ", " + averageSpeed + ", " + avgTimeTakenToFinishTrip + ", " + proportionOfFinishedTrips + ", "
                                 + optimalDiffAverage + ", " + optimalDiffWorst10PctAvg + ", " + dijDiffAverage + ", " + dijDiffWorst10PctAvg + ","
@@ -360,7 +361,7 @@ public class SimLoop {
                 */
                 }
 
-                ArrayList<Double> vehicleUnfairnessList = controller.getVehicleUnfairnessList();
+                ArrayList<Double> vehicleUnfairnessList = controller.getTrackedVehicleUnfairnessList();
                 Collections.sort(vehicleUnfairnessList);
                 double avgUnfairness = ListsUtil.calcAverageDouble(vehicleUnfairnessList);
 
@@ -394,14 +395,23 @@ public class SimLoop {
 
                 double longTermAvgTimeToFinishTrip = longTermTimeToFinishTrip/(double)nTrips;
                 System.out.println("Avg time to finish trip: " + longTermAvgTimeToFinishTrip);
+                int totalTime = 0;
+                for (Vehicle v : dijkstraOnlyTrackedVehicles) {
+                    totalTime += v.getActualTripTime();
+                }
+                double dijOnlyAverageTripTime = totalTime / (double) dijkstraOnlyTrackedVehicles.size();
+                System.out.println("Average DIJ ONLY time: " + dijOnlyAverageTripTime);
                 System.out.println("Avg unfairness " + avgUnfairness + " (Worst 10%: " + avgUnfairnessWorst10Pct + ")");
                 System.out.println("avg worst trip: " + avgWorstTrip);
 
+                System.out.println(trackedVehicles.size());
+                System.out.println(dijkstraOnlyTrackedVehicles.size());
 
                 //WRITE TO FILE
-                if (isWrite && isLongTermRouting) {
-                    writer.write(routingType + ", " + numVehiclesBase + ", " + nTrips + ", " + longTermAvgTimeToFinishTrip + ", " + dijDiffAvg + ", "
-                            + dijDiffWorst10PctAvg + ", " + avgUnfairness + ", " + avgUnfairnessWorst10Pct + ", " + avgWorstTrip + ", " + avgDijDiffThreshold + "\n");
+                if (isWrite && Routing.isLongTermRouting) {
+                    writer.write(routingType + ", " + trackedVehicles.size() + ", " + nTrips + ", " + longTermAvgTimeToFinishTrip + ", " + dijOnlyAverageTripTime + ", "
+                            + dijDiffAvg + ", " + dijDiffWorst10PctAvg + ", " + avgUnfairness + ", " + avgUnfairnessWorst10Pct + ", " + avgWorstTrip + ", "
+                            + avgDijDiffThreshold + ", " + DIJKSTRA_ONLY_PROPORTION + "\n");
                     writer.flush();
                 }
 
