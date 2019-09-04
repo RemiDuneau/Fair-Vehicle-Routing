@@ -55,7 +55,8 @@ public class TimeController {
 
     public ArrayList<Vehicle> vehiclesFutureSim = new ArrayList<>();
     public ArrayList<Vehicle> vehiclesNormal = new ArrayList<>();
-    public ArrayList<Vehicle> trackedVehiclesOrdered = new ArrayList<>();
+    public ArrayList<Vehicle> allTrackedVehicles = new ArrayList<>();
+
 
 
     public void incrementTime() {
@@ -90,7 +91,7 @@ public class TimeController {
             if (vehiclesAdded < MAX_VEHICLES_ADDED_PER_TIME_INCREMENT) {
 
                 //set diff paths
-                if (SimLoop.isTrackingVehicles && !isFutureSim && !vehicle.isStarted()) {
+                if (allTrackedVehicles.contains(vehicle) && !isFutureSim && !vehicle.isStarted()) {
 ///*
                     //calc optimal time
                     Stack<Road> optimalPath = getPathFromRoutingType(Routing.TYPE_DIJKSTRA_NO_CONGESTION, vehicle.getStartNode(), vehicle.getEndNode());
@@ -147,9 +148,10 @@ public class TimeController {
                         //add unfairness based on how different estimated trip time is compared to estimated dijkstra
                         double proportion = vehicle.getEstimatedTripTime() / (double) vehicle.getEstimatedDijkstraTime();
                         if (vehicle.getWorstTrip() < proportion) vehicle.setWorstTrip(proportion);
-                        vehicle.setUnfairness(vehicle.getUnfairness() + proportion);
-                        if (vehicle.getUnfairness() < Double.MAX_VALUE)
+                            vehicle.setUnfairness(vehicle.getUnfairness() + proportion);
+                        if (vehicle.getUnfairness() < Double.MAX_VALUE) {
                             vehicleUnfairnessMap.put(vehicle, vehicle.getUnfairness());
+                        }
                         Routing.updateDijkstra_diff_thresholdStats();
                     }
 
@@ -157,7 +159,7 @@ public class TimeController {
 
                     //check if density < 1
                     if (road.getDensity() < Road.MAX_DENSITY) {
-                        if (SimLoop.isTrackingVehicles && !isFutureSim)
+                        if (allTrackedVehicles.contains(vehicle) && !isFutureSim)
                             vehiclesSentOut++;
                         tempActiveVehicles.add(vehicle);
                         vehicle.setStarted(true);
@@ -171,6 +173,7 @@ public class TimeController {
                         vehiclesToRemove.add(vehicle);
                     }
                 }
+                else vehicle.setFailedAddattempts(vehicle.getFailedAddattempts() + 1);
                 vehiclesChecked++;
             }
         }
@@ -236,7 +239,6 @@ public class TimeController {
                 vehiclesToRemove.add(vehicle);
                 vehicle.getCurrentRoad().removeVehicle(vehicle);
                 vehicle.resetRoadDistance();
-                vehicle.setStarted(false);
             }
         }
 
@@ -454,8 +456,10 @@ public class TimeController {
     private void resetVehicles() {
         for (Vehicle v : vehicles) {
             v.setFinished(false);
+            v.setStarted(false);
             v.setActualTripTime(0);
             v.resetTripDistance();
+            v.setFailedAddattempts(0);
         }
     }
 
@@ -490,7 +494,7 @@ public class TimeController {
         int initial = MAX_VEHICLES_ADDED_PER_TIME_INCREMENT*SimLoop.INIT_ITERATIONS;
         for (int n = initial; n < initial + MAX_VEHICLES_ADDED_PER_TIME_INCREMENT*SimLoop.NUM_ITERATIONS; n++) {
             Vehicle v = vehicles[n];
-            trackedVehiclesOrdered.add(v);
+            allTrackedVehicles.add(v);
             if (v.isDijkstraOnly())
                 dijkstraOnlyTrackedVehicles.add(v);
             else trackedVehicles.add(v);
@@ -519,6 +523,10 @@ public class TimeController {
 
     public ArrayList<Vehicle> getActiveVehicles() {
         return activeVehicles;
+    }
+
+    public ArrayList<Vehicle> getAllTrackedVehicles() {
+        return allTrackedVehicles;
     }
 
     public ArrayList<Vehicle> getTrackedVehicles() {

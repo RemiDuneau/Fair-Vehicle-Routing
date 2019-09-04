@@ -10,7 +10,8 @@ public class Routing {
     public static final int TYPE_LEAST_DENSITY_ROAD_LENGTH = 4;
     public static final int TYPE_LEAST_DENSITY_EXPONENTIAL = 5;
     public static final int TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA = 6;
-    public static final int TYPE_LEAST_DENSITY_WITH_DIJKSTRA = 7;
+    public static final int TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA_AVERAGE = 7;
+    public static final int TYPE_LEAST_DENSITY_WITH_DIJKSTRA = 8;
     public static final int TYPE_GREATEST_SPEED_ROAD_LENGTH = 9;
     public static final int TYPE_FUTURE_FASTEST = 10;
     public static final int TYPE_FUTURE_LEAST_DENSITY = 11;
@@ -102,6 +103,8 @@ public class Routing {
         //calculate dijkstra estimated time if isDijkstraDiffThreshold
         int dijkstraEstimatedTime = 0;
         if (isDijkstraDiffThresholdEnabled) {
+
+            if (dijkstra_diff_threshold == 1.0) routingType = Routing.TYPE_DIJKSTRA;
 
             //calc dijkstraEstimatedTime
             isDijkstraDiffThresholdEnabled = false; //turn off while getting dijPath to prevent infinite loop of getting dijPath.
@@ -213,6 +216,18 @@ public class Routing {
                                 if (density < Road.MAX_DENSITY) {
                                     remainder = calculateRemainder(currentNode, previousNodeMap, true);
                                     cost = costMap.get(currentNode) + Math.exp(density) * road.getTimeToTraverse(remainder);
+                                }
+                                break;
+
+                            //-----THIS CASE CONTAINS REMAINDER ERRORS-----
+                            case TYPE_LEAST_DENSITY_EXPONENTIAL_WITH_DIJKSTRA_AVERAGE:
+                                if (density < Road.MAX_DENSITY) {
+                                    Stack<Road> pathSoFar  = createStack(currentNode, previousNodeMap);
+                                    double totalCost = road.getTimeToTraverse();
+                                    for (Road rd : pathSoFar) {
+                                        totalCost += Math.exp(rd.getDensity()) * rd.getTimeToTraverse();
+                                    }
+                                    cost = totalCost / (double) (pathSoFar.size() + 1);
                                 }
                                 break;
 

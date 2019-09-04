@@ -17,20 +17,22 @@ public class SimLoop {
 
 
     public static void main(String[] args) throws IOException {
-        for (double proportion = 0.1; proportion < 1; proportion+=0.1) {
-            FileWriter fileWriter = new FileWriter("longTermDijOnly" + (int)proportion*100 + ".csv", true);
+        for (double proportion = 0; proportion < 1; proportion+=0.2) {
+            //FileWriter fileWriter = new FileWriter("longTermDijOnly" + (int) (proportion*100) + ".csv", true);
+            FileWriter fileWriter = new FileWriter("results.csv", true);
             BufferedWriter writer = new BufferedWriter(fileWriter);
-            boolean isWrite = true;
-            int[] routingTypes = {6};
+            boolean isWrite = false;
+            int[] routingTypes = {2};
 
             DIJKSTRA_ONLY_PROPORTION = proportion;
             //int routingType = routingTypes[type];
             int routingType = routingTypes[0];
             int initial = 500;
-            int numCycles = 9;
+            int numCycles = 8;
             int vehiclesIncrement = 250;
             for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
                 double longTermTimeToFinishTrip = 0;
+                double dijOnlyLongTermTimeToFinishTrip = 0;
                 System.out.println("TRACKED VEHICLES: " + numVehiclesBase);
 
                 //init variables
@@ -40,9 +42,11 @@ public class SimLoop {
                 TimeController controller = new TimeController(graph);
                 controller.createRandomNodeVehicles(true);
                 Vehicle[] vehicles = controller.getVehicles();
-                ArrayList<Vehicle> trackedVehicles = controller.getTrackedVehicles();
-                ArrayList<Vehicle> dijkstraOnlyTrackedVehicles = controller.getDijkstraOnlyTrackedVehicles();
-                ArrayList<Vehicle> activeVehicles = controller.getActiveVehicles();
+                ArrayList<Vehicle> allTrackedVehicles = controller.getAllTrackedVehicles(),
+                        trackedVehicles = controller.getTrackedVehicles(),
+                        dijkstraOnlyTrackedVehicles = controller.getDijkstraOnlyTrackedVehicles(),
+                        activeVehicles = controller.getActiveVehicles(),
+                        inactiveVehicles = controller.getInactiveVehicles();
                 Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = controller.getAllPathsMap();
                 ArrayList<Road> roads = controller.getRoads();
                 ArrayList<ArrayList<Double>> dijDiffLists = new ArrayList();
@@ -52,8 +56,7 @@ public class SimLoop {
 
                 //find all paths from every vehicle's start node to end node
                 for (Vehicle v : vehicles) {
-                    if (v.isDijkstraOnly())
-                        v.setRoutingType(Routing.TYPE_DIJKSTRA);
+                    if (v.isDijkstraOnly()) v.setRoutingType(Routing.TYPE_DIJKSTRA);
                     else v.setRoutingType(routingType);
 
                     if (Routing.isDynamicRouting) {
@@ -96,12 +99,15 @@ public class SimLoop {
                     }
 
                     //MAIN LOOP
-                    for (int i = 0; i < NUM_ITERATIONS; i++) {
-                        incrementCount = i;
+                    //for (int i = 0; i < NUM_ITERATIONS; i++) {
+                    int t = 0;
+                    boolean bAllStarted = false;
+                    while (!bAllStarted) {
+                        incrementCount = t;
                         //if (day == 2 && i == 99) {
                         //    System.out.print("");
                         //}
-                        //System.out.print("TIME: " + i);
+                        //System.out.print("TIME: " + t);
                         controller.incrementTime();
                     /*
                     if (incrementCount >= controller.ADDEDVEHICLES) {
@@ -116,26 +122,37 @@ public class SimLoop {
                             totalDensityPerIteration += road.getDensity();
                         }
 
-                        //System.out.println(" (Active Vehicles: " + activeVehicles.size() + ")" + " (Tracked Vehicles: " + trackedVehicles.size() + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size()
+                        int activeTrackedVehicles = 0;
+                        bAllStarted = true;
+                        for (Vehicle v : allTrackedVehicles) {
+                            if (v.isStarted()) activeTrackedVehicles++;
+                            else bAllStarted = false;
+                        }
+
+                        //System.out.println(" (Active Vehicles: " + activeVehicles.size() + ") (Inactive Vehicles: " + inactiveVehicles.size() + ")  (Tracked Vehicles: " + activeTrackedVehicles + ")" + " (Avg Density: " + totalDensityPerIteration / (double) roads.size()
                         //        + ") (DijDiff Threshold: " + Routing.dijkstra_diff_threshold + ") (Avg unfairness: " + ListsUtil.calcAverageDouble(controller.getTrackedVehicleUnfairnessList()) + ")");
+                        t++;
                     }
 
                     //keep incrementing time until all tracked vehicles are finished
                     isTrackingVehicles = false;
                     boolean isAllVehiclesFinished = false;
+                    ArrayList<Vehicle> unfinishedVehicles = new ArrayList<>();
                     while (!isAllVehiclesFinished) {
                         controller.incrementTime();
 
                         //check if all vehicles are finished
                         boolean isFinished = true;
                         isFinishedLoop:
-                        for (Vehicle v : trackedVehicles) {
+                        for (Vehicle v : allTrackedVehicles) {
                             if (!v.isFinished()) {
+                                unfinishedVehicles.add(v);
                                 isFinished = false;
                                 break isFinishedLoop;
                             }
                         }
                         isAllVehiclesFinished = isFinished;
+                        unfinishedVehicles.clear();
                     }
 
 
@@ -182,6 +199,17 @@ public class SimLoop {
                     //System.out.println("Total average density = " + totalAverageDensity);
 
                     //System.out.println("Vehicles sent out: " + trackedVehicles.size());
+
+                    //DIJ ONLY TIME STUFF
+                    double dijOnlyTimeTaken = 0;
+                    int dijOnlyNumFinishedTrips = 0;
+                    for (Vehicle v : dijkstraOnlyTrackedVehicles) {
+                        if (v.isFinished()) {
+                            dijOnlyTimeTaken += v.getActualTripTime();
+                            dijOnlyNumFinishedTrips ++;
+                        }
+                    }
+                    dijOnlyLongTermTimeToFinishTrip += dijOnlyTimeTaken / (double) dijOnlyNumFinishedTrips;
 
                     //------- time differences -------
                     ArrayList<Double> optimalTimeDifferenceList = new ArrayList<>();
@@ -245,16 +273,16 @@ public class SimLoop {
                     }
 
                     ArrayList<Integer> actualTripTimes = new ArrayList<>();
-                    for (Vehicle v : controller.trackedVehiclesOrdered) {
+                    for (Vehicle v : controller.allTrackedVehicles) {
                         actualTripTimes.add(v.getActualTripTime());
                     }
 
                     ArrayList<Double> dijDiffTripTimes = new ArrayList<>();
-                    for (int i = 0; i < controller.trackedVehiclesOrdered.size(); i++) {
+                    for (int i = 0; i < controller.allTrackedVehicles.size(); i++) {
                         int actualTripTime = actualTripTimes.get(i);
                         int dijTripTime = dijDiffActualTripTimes.get(i);
                         double diff = (actualTripTime - dijTripTime);
-                        Vehicle v = controller.trackedVehiclesOrdered.get(i);
+                        Vehicle v = controller.allTrackedVehicles.get(i);
                         if (diff > 100) {
                             System.out.print("");
                         }
@@ -341,7 +369,7 @@ public class SimLoop {
  */
                 /*
                         BufferedWriter dijBWriter = new BufferedWriter( new FileWriter("dij" + numVehiclesBase, true));
-                        for (Vehicle v : controller.trackedVehiclesOrdered) {
+                        for (Vehicle v : controller.allTrackedVehicles) {
                             dijBWriter.write(v.getActualTripTime() + "\n");
                             dijBWriter.flush();
                         }
@@ -397,9 +425,10 @@ public class SimLoop {
                 System.out.println("Avg time to finish trip: " + longTermAvgTimeToFinishTrip);
                 int totalTime = 0;
                 for (Vehicle v : dijkstraOnlyTrackedVehicles) {
-                    totalTime += v.getActualTripTime();
+                    totalTime += v.getTotalTripTime();
                 }
-                double dijOnlyAverageTripTime = totalTime / (double) dijkstraOnlyTrackedVehicles.size();
+                double dijOnlyAverageTripTime = dijOnlyLongTermTimeToFinishTrip/ (double) nTrips;
+                //double dijOnlyAverageTripTime = totalTime / (double) (dijkstraOnlyTrackedVehicles.size() * nTrips);
                 System.out.println("Average DIJ ONLY time: " + dijOnlyAverageTripTime);
                 System.out.println("Avg unfairness " + avgUnfairness + " (Worst 10%: " + avgUnfairnessWorst10Pct + ")");
                 System.out.println("avg worst trip: " + avgWorstTrip);
