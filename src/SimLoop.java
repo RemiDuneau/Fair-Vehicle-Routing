@@ -17,12 +17,12 @@ public class SimLoop {
 
 
     public static void main(String[] args) throws IOException {
-        for (double proportion = 0; proportion < 1; proportion+=0.2) {
-            //FileWriter fileWriter = new FileWriter("longTermDijOnly" + (int) (proportion*100) + ".csv", true);
-            FileWriter fileWriter = new FileWriter("results.csv", true);
+        for (double proportion = 0.1; proportion < 1; proportion+=0.2) {
+            //FileWriter fileWriter = new FileWriter("longTermDijOnly" + (int) ((proportion*100 + 0.1)) + "scatter.csv", true);
+            FileWriter fileWriter = new FileWriter("longTermDijOnlyRoadDensityCheck.csv", true);
             BufferedWriter writer = new BufferedWriter(fileWriter);
-            boolean isWrite = false;
-            int[] routingTypes = {2};
+            boolean isWrite = true;
+            int[] routingTypes = {0};
 
             DIJKSTRA_ONLY_PROPORTION = proportion;
             //int routingType = routingTypes[type];
@@ -31,8 +31,6 @@ public class SimLoop {
             int numCycles = 8;
             int vehiclesIncrement = 250;
             for (int numVehiclesBase = initial; numVehiclesBase < numCycles * vehiclesIncrement + initial; numVehiclesBase += vehiclesIncrement) {
-                double longTermTimeToFinishTrip = 0;
-                double dijOnlyLongTermTimeToFinishTrip = 0;
                 System.out.println("TRACKED VEHICLES: " + numVehiclesBase);
 
                 //init variables
@@ -76,6 +74,13 @@ public class SimLoop {
                         //ArrayList<Stack<Road>> allPaths = Routing.dfsFindAllPaths(startNode, endNode);
                         //allPathsMap.put(new Tuple<>(startNode, endNode), allPaths);
                     }
+                }
+
+                double longTermTimeToFinishTrip = 0;
+                double dijOnlyLongTermTimeToFinishTrip = 0;
+                ArrayList<Double> longTermDensities = new ArrayList<>();
+                for (Road rd : roads) {
+                    longTermDensities.add(0.0);
                 }
 
                 int nTrips = 1;
@@ -190,12 +195,10 @@ public class SimLoop {
 
                     //average density
                     double averageDensitySum = 0;
-                    for (Road road : roads) {
-                        double averageDensity = road.getDensitySum() / NUM_ITERATIONS;
-                        //System.out.println("Road " + road.getNodesAsString() + " average density: " + averageDensity);
-                        averageDensitySum += averageDensity;
+                    for (int i = 0; i < roads.size(); i++) {
+                        double add = roads.get(i).getDensitySum() / (double) controller.getTrackedTimeIncrements();
+                        longTermDensities.set(i, longTermDensities.get(i) + add);
                     }
-                    double totalAverageDensity = averageDensitySum / roads.size();
                     //System.out.println("Total average density = " + totalAverageDensity);
 
                     //System.out.println("Vehicles sent out: " + trackedVehicles.size());
@@ -423,12 +426,13 @@ public class SimLoop {
 
                 double longTermAvgTimeToFinishTrip = longTermTimeToFinishTrip/(double)nTrips;
                 System.out.println("Avg time to finish trip: " + longTermAvgTimeToFinishTrip);
-                int totalTime = 0;
+                int avgTotal = 0;
                 for (Vehicle v : dijkstraOnlyTrackedVehicles) {
-                    totalTime += v.getTotalTripTime();
+                    avgTotal += v.getAverageTripTime();
                 }
-                double dijOnlyAverageTripTime = dijOnlyLongTermTimeToFinishTrip/ (double) nTrips;
+                double dijOnlyAverageTripTime = avgTotal/ (double) dijkstraOnlyTrackedVehicles.size();
                 //double dijOnlyAverageTripTime = totalTime / (double) (dijkstraOnlyTrackedVehicles.size() * nTrips);
+
                 System.out.println("Average DIJ ONLY time: " + dijOnlyAverageTripTime);
                 System.out.println("Avg unfairness " + avgUnfairness + " (Worst 10%: " + avgUnfairnessWorst10Pct + ")");
                 System.out.println("avg worst trip: " + avgWorstTrip);
@@ -443,6 +447,64 @@ public class SimLoop {
                             + avgDijDiffThreshold + ", " + DIJKSTRA_ONLY_PROPORTION + "\n");
                     writer.flush();
                 }
+
+                writer.write("\n\n\n");
+                writer.flush();
+
+
+                //init maps
+                Map<Road, Integer> roadFrequenciesDijOnlyMap = new HashMap<>();
+                Map<Road, Integer> roadFrequenciesTrackedMap = new HashMap<>();
+                for (Road rd : roads) {
+                    roadFrequenciesDijOnlyMap.put(rd, 0);
+                    roadFrequenciesTrackedMap.put(rd, 0);
+                }
+
+                //add vehicle frequencies to maps
+                for (Vehicle v : dijkstraOnlyTrackedVehicles) {
+                    Map<Road, Integer> roadsMap = v.getRoadsTakenMap();
+                    for (Road rd : roadsMap.keySet()) {
+                        roadFrequenciesDijOnlyMap.put(rd, roadFrequenciesDijOnlyMap.get(rd) + roadsMap.get(rd));
+                    }
+                }
+                for (Vehicle v : trackedVehicles) {
+                    Map<Road, Integer> roadsMap = v.getRoadsTakenMap();
+                    for (Road rd : roadsMap.keySet()) {
+                        roadFrequenciesTrackedMap.put(rd, roadFrequenciesTrackedMap.get(rd) + roadsMap.get(rd));
+                    }
+                }
+
+                //get average
+                Map<Road, Double> averageRoadFrequenciesDijOnlyMap = new HashMap<>();
+                Map<Road, Double> averageRoadFrequenciesTrackedMap = new HashMap<>();
+                for (Road rd : roads) {
+                    averageRoadFrequenciesDijOnlyMap.put(rd, roadFrequenciesDijOnlyMap.get(rd)/(double)(nTrips*dijkstraOnlyTrackedVehicles.size()));
+                    averageRoadFrequenciesTrackedMap.put(rd, roadFrequenciesTrackedMap.get(rd)/(double)(nTrips*trackedVehicles.size()));
+                }
+
+                //write to file
+                for (int i = 0; i < roads.size(); i++) {
+                    Double d = longTermDensities.get(i);
+                    Road rd = roads.get(i);
+                    d = d/nTrips;
+                    String toWrite = rd.getNodesAsString() + ", " + d + ", " + averageRoadFrequenciesTrackedMap.get(rd) + ", " + averageRoadFrequenciesDijOnlyMap.get(rd) + "\n";
+                    System.out.print(toWrite);
+                    writer.write(toWrite);
+                    writer.flush();
+                }
+/*
+                for (Vehicle v : trackedVehicles) {
+                    writer.write(v.getAverageTripTime() + ", " + v.getOptimalTripTime() + "\n");
+                }
+                writer.flush();
+
+                for (Vehicle v : dijkstraOnlyTrackedVehicles) {
+                    writer.write(v.getAverageTripTime() + ", " + v.getOptimalTripTime() + "\n");
+                }
+                writer.write("\n\n\n\n\n");
+                writer.flush();
+
+ */
 
                 System.out.println("----------------------------\n");
             }

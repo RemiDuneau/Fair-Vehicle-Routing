@@ -1,3 +1,5 @@
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 public class Vehicle implements Cloneable {
 
@@ -36,10 +38,11 @@ public class Vehicle implements Cloneable {
     private Stack<Road> path;
     private Road currentRoad;
     private double unfairness = 0, worstTrip = 0;
-    private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, tripsFinished = 0,
+    private int totalDistance = 0, tripDistance = 0, roadDistance = 0, currentSpeed, numTrips = 0,
             optimalTripTime, dijkstraTripTime = 0,  actualTripTime = 0, totalTripTime = 0, estimatedDijkstraTime = 0, estimatedTripTime,
             failedAddattempts;
     private boolean isFinished = false, isStarted = false, isDynamicRouting, isDijkstraOnly = false;
+    private Map<Road, Integer> roadsTakenMap = new HashMap<>();
 
     private TimeController controller;
 
@@ -63,6 +66,9 @@ public class Vehicle implements Cloneable {
         return clone;
     }
 
+    /**
+     * NOT FUTURE SIM SAFE BECAUSE NUMTRIPS INCREASES WHEN VEHICLE FINISHES, AND MAP IS UPDATED.
+     */
     public void move() {
         actualTripTime++;
         totalTripTime++;
@@ -80,7 +86,8 @@ public class Vehicle implements Cloneable {
             //check if finished
             if (currentRoad.getEndNode() == endNode) {
                 isFinished = true;
-                tripsFinished += 1;
+                numTrips += 1;
+                updateRoadsTakenMap();
             }
 
             if (path.isEmpty() && !isFinished) {
@@ -113,6 +120,14 @@ public class Vehicle implements Cloneable {
         }
         else {
             incrementDistances(currentSpeed);
+        }
+    }
+
+    private void updateRoadsTakenMap() {
+        for (Road road : actualPath) {
+            if (roadsTakenMap.containsKey(road))
+                roadsTakenMap.put(road, roadsTakenMap.get(road)+1);
+            else roadsTakenMap.put(road, 1);
         }
     }
 
@@ -240,8 +255,8 @@ public class Vehicle implements Cloneable {
         return roadDistance;
     }
 
-    public int getTripsFinished() {
-        return tripsFinished;
+    public int getNumTrips() {
+        return numTrips;
     }
 
     public int getOptimalTripTime() {
@@ -270,6 +285,10 @@ public class Vehicle implements Cloneable {
 
     public int getTotalTripTime() {
         return totalTripTime;
+    }
+
+    public double getAverageTripTime() {
+        return totalTripTime / (double) numTrips;
     }
 
     public void setTotalTripTime(int totalTripTime) {
@@ -319,5 +338,9 @@ public class Vehicle implements Cloneable {
 
     public void setFailedAddattempts(int failedAddattempts) {
         this.failedAddattempts = failedAddattempts;
+    }
+
+    public Map<Road, Integer> getRoadsTakenMap() {
+        return roadsTakenMap;
     }
 }

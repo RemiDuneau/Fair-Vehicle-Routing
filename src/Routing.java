@@ -104,7 +104,7 @@ public class Routing {
         int dijkstraEstimatedTime = 0;
         if (isDijkstraDiffThresholdEnabled) {
 
-            if (dijkstra_diff_threshold == 1.0) routingType = Routing.TYPE_DIJKSTRA;
+            //if (dijkstra_diff_threshold == 1.0) routingType = Routing.TYPE_DIJKSTRA;
 
             //calc dijkstraEstimatedTime
             isDijkstraDiffThresholdEnabled = false; //turn off while getting dijPath to prevent infinite loop of getting dijPath.

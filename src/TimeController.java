@@ -38,7 +38,7 @@ public class TimeController {
     private ArrayList<Node> nodes;
     private ArrayList<Road> roads;
     private Map<Tuple<Node, Node>, ArrayList<Stack<Road>>> allPathsMap = new HashMap<>();
-    private int vehiclesSentOut = 0, vehiclesAddedThisIncrement, vehiclesCheckedThisIncrement;
+    private int vehiclesSentOut = 0, vehiclesAddedThisIncrement, vehiclesCheckedThisIncrement, totalTimeIncrements = 0, trackedTimeIncrements = 0;
     private double processingTime = 0;
 
     private boolean isLongTermRouting;
@@ -64,6 +64,10 @@ public class TimeController {
     }
 
     public void incrementTime(int vehiclesAddedThisIncrement, int totalVehiclesChecked) {
+        if (!isFutureSim) {
+            totalTimeIncrements ++;
+            if (SimLoop.isTrackingVehicles) trackedTimeIncrements++;
+        }
         addVehicles(vehiclesAddedThisIncrement, totalVehiclesChecked);
         moveVehicles();
         removeVehicles();
@@ -590,5 +594,13 @@ public class TimeController {
 
     public void setLongTermRouting(boolean longTermRouting) {
         isLongTermRouting = longTermRouting;
+    }
+
+    public int getTotalTimeIncrements() {
+        return totalTimeIncrements;
+    }
+
+    public int getTrackedTimeIncrements() {
+        return trackedTimeIncrements;
     }
 }
