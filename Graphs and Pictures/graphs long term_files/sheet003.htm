@@ -1,0 +1,1340 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Excel.Sheet>
+<meta name=Generator content="Microsoft Excel 15">
+<link id=Main-File rel=Main-File href="../graphs%20long%20term.htm">
+<link rel=File-List href=filelist.xml>
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+x\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<link rel=Stylesheet href=stylesheet.css>
+<style>
+<!--table
+	{mso-displayed-decimal-separator:"\.";
+	mso-displayed-thousand-separator:"\,";}
+@page
+	{margin:.75in .7in .75in .7in;
+	mso-header-margin:.3in;
+	mso-footer-margin:.3in;}
+-->
+</style>
+<![if !supportTabStrip]><script language="JavaScript">
+<!--
+function fnUpdateTabs()
+ {
+  if (parent.window.g_iIEVer>=4) {
+   if (parent.document.readyState=="complete"
+    && parent.frames['frTabs'].document.readyState=="complete")
+   parent.fnSetActiveSheet(2);
+  else
+   window.setTimeout("fnUpdateTabs();",150);
+ }
+}
+
+if (window.name!="frSheet")
+ window.location.replace("../graphs%20long%20term.htm");
+else
+ fnUpdateTabs();
+//-->
+</script>
+<![endif]>
+</head>
+
+<body link="#0563C1" vlink="#954F72">
+
+<table border=0 cellpadding=0 cellspacing=0 width=1817 style='border-collapse:
+ collapse;table-layout:fixed;width:1366pt'>
+ <col width=237 style='mso-width-source:userset;mso-width-alt:8667;width:178pt'>
+ <col width=113 span=2 style='mso-width-source:userset;mso-width-alt:4132;
+ width:85pt'>
+ <col width=109 style='mso-width-source:userset;mso-width-alt:3986;width:82pt'>
+ <col width=141 style='mso-width-source:userset;mso-width-alt:5156;width:106pt'>
+ <col width=113 span=3 style='mso-width-source:userset;mso-width-alt:4132;
+ width:85pt'>
+ <col width=129 style='mso-width-source:userset;mso-width-alt:4717;width:97pt'>
+ <col width=185 style='mso-width-source:userset;mso-width-alt:6765;width:139pt'>
+ <col width=206 style='mso-width-source:userset;mso-width-alt:7533;width:155pt'>
+ <col width=97 style='mso-width-source:userset;mso-width-alt:3547;width:73pt'>
+ <col width=148 style='mso-width-source:userset;mso-width-alt:5412;width:111pt'>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 width=237 style='height:15.0pt;width:178pt'>routing type</td>
+  <td width=113 style='width:85pt'>total vehicles</td>
+  <td width=113 style='width:85pt'>vehicles tracked</td>
+  <td width=109 style='width:82pt'>number of trips</td>
+  <td class=xl65 width=141 style='width:106pt'>avg time to finish trip</td>
+  <td class=xl65 width=113 style='width:85pt'>dijdiffavg</td>
+  <td class=xl65 width=113 style='width:85pt'>dijdiff10%avg</td>
+  <td class=xl65 width=113 style='width:85pt'>avg unfairness</td>
+  <td class=xl65 width=129 style='width:97pt'>avg unfairness 10%</td>
+  <td class=xl65 width=185 style='width:139pt'>avg unfairness normalised</td>
+  <td class=xl65 width=206 style='width:155pt'>avg unfairness 10% normalised</td>
+  <td class=xl65 width=97 style='width:73pt'>avg worst trip</td>
+  <td class=xl65 width=148 style='width:111pt'>avg dijDiff Threshold</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>2500</td>
+  <td align=right>500</td>
+  <td align=right>14</td>
+  <td align=right>131.1751429</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.033955951</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>3750</td>
+  <td align=right>700</td>
+  <td align=right>14</td>
+  <td align=right>171.3256122</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.030693266</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>5000</td>
+  <td align=right>1000</td>
+  <td align=right>14</td>
+  <td align=right>248.0528571</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.031865234</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>6250</td>
+  <td align=right>1200</td>
+  <td align=right>14</td>
+  <td align=right>283.9350595</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.03118522</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>7500</td>
+  <td align=right>1500</td>
+  <td align=right>14</td>
+  <td align=right>396.611381</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.031892267</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>8750</td>
+  <td align=right>1700</td>
+  <td align=right>14</td>
+  <td align=right>504.9201681</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.031499761</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>10000</td>
+  <td align=right>2000</td>
+  <td align=right>14</td>
+  <td align=right>732.6396786</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.031976237</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>11250</td>
+  <td align=right>2200</td>
+  <td align=right>14</td>
+  <td align=right>848.4286364</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.031517001</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Dijkstra</td>
+  <td align=right>12500</td>
+  <td align=right>2500</td>
+  <td align=right>14</td>
+  <td align=right>1021.275371</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14</td>
+  <td align=right>14</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1</td>
+  <td align=right>1.031949215</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 colspan=13 style='height:15.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>routing type</td>
+  <td>total vehicles</td>
+  <td>vehicles tracked</td>
+  <td>number of trips</td>
+  <td class=xl65>avg time to finish trip</td>
+  <td class=xl65>dijdiffavg</td>
+  <td class=xl65>dijdiff10%avg</td>
+  <td class=xl65>avg unfairness</td>
+  <td class=xl65>avg unfairness 10%</td>
+  <td class=xl65>avg unfairness normalised</td>
+  <td class=xl65>avg unfairness 10% normalised</td>
+  <td class=xl65>avg worst trip</td>
+  <td class=xl65>avg dijDiff Threshold</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>2500</td>
+  <td align=right>500</td>
+  <td align=right>14</td>
+  <td align=right>144.105</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.73492323</td>
+  <td align=right>20.60949838</td>
+  <td align=right>1.123923088</td>
+  <td align=right>1.472107027</td>
+  <td align=right>1.206377702</td>
+  <td align=right>1.032166279</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>3750</td>
+  <td align=right>700</td>
+  <td align=right>14</td>
+  <td align=right>140.3088776</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.57035256</td>
+  <td align=right>20.09117689</td>
+  <td align=right>1.11216804</td>
+  <td align=right>1.435084064</td>
+  <td align=right>1.184269866</td>
+  <td align=right>1.031493364</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>5000</td>
+  <td align=right>1000</td>
+  <td align=right>14</td>
+  <td align=right>143.1784286</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.49692443</td>
+  <td align=right>19.70008881</td>
+  <td align=right>1.106923173</td>
+  <td align=right>1.407149201</td>
+  <td align=right>1.178486296</td>
+  <td align=right>1.031678207</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>6250</td>
+  <td align=right>1200</td>
+  <td align=right>14</td>
+  <td align=right>148.5751786</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.4620796</td>
+  <td align=right>19.60251997</td>
+  <td align=right>1.104434257</td>
+  <td align=right>1.400179998</td>
+  <td align=right>1.175274916</td>
+  <td align=right>1.030681264</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>7500</td>
+  <td align=right>1500</td>
+  <td align=right>14</td>
+  <td align=right>178.3780476</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.53749922</td>
+  <td align=right>19.64579299</td>
+  <td align=right>1.109821373</td>
+  <td align=right>1.403270928</td>
+  <td align=right>1.18257773</td>
+  <td align=right>1.031355293</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>8750</td>
+  <td align=right>1700</td>
+  <td align=right>14</td>
+  <td align=right>263.8482353</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.48555775</td>
+  <td align=right>19.89706849</td>
+  <td align=right>1.106111268</td>
+  <td align=right>1.421219178</td>
+  <td align=right>1.182160602</td>
+  <td align=right>1.03112447</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>10000</td>
+  <td align=right>2000</td>
+  <td align=right>14</td>
+  <td align=right>418.1240714</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.4232367</td>
+  <td align=right>19.76981252</td>
+  <td align=right>1.101659764</td>
+  <td align=right>1.412129465</td>
+  <td align=right>1.177303221</td>
+  <td align=right>1.03135936</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>11250</td>
+  <td align=right>2200</td>
+  <td align=right>14</td>
+  <td align=right>565.4458117</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.2121919</td>
+  <td align=right>19.33156003</td>
+  <td align=right>1.086585136</td>
+  <td align=right>1.380825716</td>
+  <td align=right>1.166754963</td>
+  <td align=right>1.031037468</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density</td>
+  <td align=right>12500</td>
+  <td align=right>2500</td>
+  <td align=right>14</td>
+  <td align=right>635.2134</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>16.30890579</td>
+  <td align=right>27.73368149</td>
+  <td align=right>1.164921842</td>
+  <td align=right>1.980977249</td>
+  <td align=right>1.164921842</td>
+  <td align=right>1.032617549</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 colspan=13 style='height:15.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>routing type</td>
+  <td>total vehicles</td>
+  <td>vehicles tracked</td>
+  <td>number of trips</td>
+  <td class=xl65>avg time to finish trip</td>
+  <td class=xl65>dijdiffavg</td>
+  <td class=xl65>dijdiff10%avg</td>
+  <td class=xl65>avg unfairness</td>
+  <td class=xl65>avg unfairness 10%</td>
+  <td class=xl65>avg unfairness normalised</td>
+  <td class=xl65>avg unfairness 10% normalised</td>
+  <td class=xl65>avg worst trip</td>
+  <td class=xl65>avg dijDiff Threshold</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>2500</td>
+  <td align=right>500</td>
+  <td align=right>14</td>
+  <td align=right>142.622</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.41662671</td>
+  <td align=right>19.85292577</td>
+  <td align=right>1.101187622</td>
+  <td align=right>1.418066126</td>
+  <td align=right>1.169409205</td>
+  <td align=right>1.0322976</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>3750</td>
+  <td align=right>700</td>
+  <td align=right>14</td>
+  <td align=right>140.6454082</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.31763155</td>
+  <td align=right>19.64867889</td>
+  <td align=right>1.09411654</td>
+  <td align=right>1.403477063</td>
+  <td align=right>1.150302335</td>
+  <td align=right>1.03157982</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>5000</td>
+  <td align=right>1000</td>
+  <td align=right>14</td>
+  <td align=right>159.4315</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.16282213</td>
+  <td align=right>18.66789451</td>
+  <td align=right>1.083058724</td>
+  <td align=right>1.333421036</td>
+  <td align=right>1.131464534</td>
+  <td align=right>1.031421279</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>6250</td>
+  <td align=right>1200</td>
+  <td align=right>14</td>
+  <td align=right>173.8243452</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.15555463</td>
+  <td align=right>19.15997181</td>
+  <td align=right>1.082539616</td>
+  <td align=right>1.368569415</td>
+  <td align=right>1.132266504</td>
+  <td align=right>1.030804474</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>7500</td>
+  <td align=right>1500</td>
+  <td align=right>14</td>
+  <td align=right>248.4498095</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.1420888</td>
+  <td align=right>18.90443864</td>
+  <td align=right>1.081577771</td>
+  <td align=right>1.350317046</td>
+  <td align=right>1.135842361</td>
+  <td align=right>1.03161192</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>8750</td>
+  <td align=right>1700</td>
+  <td align=right>14</td>
+  <td align=right>356.0181513</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.10807349</td>
+  <td align=right>18.73735915</td>
+  <td align=right>1.079148106</td>
+  <td align=right>1.338382797</td>
+  <td align=right>1.135225526</td>
+  <td align=right>1.031285924</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>10000</td>
+  <td align=right>2000</td>
+  <td align=right>14</td>
+  <td align=right>534.1632143</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.88361221</td>
+  <td align=right>18.24743386</td>
+  <td align=right>1.063115158</td>
+  <td align=right>1.303388133</td>
+  <td align=right>1.113511617</td>
+  <td align=right>1.031583689</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>11250</td>
+  <td align=right>2200</td>
+  <td align=right>14</td>
+  <td align=right>654.2669805</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.87730181</td>
+  <td align=right>18.29119511</td>
+  <td align=right>1.062664415</td>
+  <td align=right>1.306513937</td>
+  <td align=right>1.115594995</td>
+  <td align=right>1.031215205</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density w/ Road Length</td>
+  <td align=right>12500</td>
+  <td align=right>2500</td>
+  <td align=right>14</td>
+  <td align=right>837.5296286</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.69020477</td>
+  <td align=right>17.65288135</td>
+  <td align=right>1.049300341</td>
+  <td align=right>1.260920096</td>
+  <td align=right>1.098586402</td>
+  <td align=right>1.031770465</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 colspan=13 style='height:15.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>routing type</td>
+  <td>total vehicles</td>
+  <td>vehicles tracked</td>
+  <td>number of trips</td>
+  <td class=xl65>avg time to finish trip</td>
+  <td class=xl65>dijdiffavg</td>
+  <td class=xl65>dijdiff10%avg</td>
+  <td class=xl65>avg unfairness</td>
+  <td class=xl65>avg unfairness 10%</td>
+  <td class=xl65>avg unfairness normalised</td>
+  <td class=xl65>avg unfairness 10% normalised</td>
+  <td class=xl65>avg worst trip</td>
+  <td class=xl65>avg dijDiff Threshold</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>2500</td>
+  <td align=right>500</td>
+  <td align=right>14</td>
+  <td align=right>133.979</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.03857272</td>
+  <td align=right>19.18270591</td>
+  <td align=right>1.074183766</td>
+  <td align=right>1.370193279</td>
+  <td align=right>1.115688085</td>
+  <td align=right>1.033045816</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>3750</td>
+  <td align=right>700</td>
+  <td align=right>14</td>
+  <td align=right>133.9879592</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.18951534</td>
+  <td align=right>19.53713887</td>
+  <td align=right>1.084965381</td>
+  <td align=right>1.39550992</td>
+  <td align=right>1.119673688</td>
+  <td align=right>1.032346877</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>5000</td>
+  <td align=right>1000</td>
+  <td align=right>14</td>
+  <td align=right>136.0120714</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.17961919</td>
+  <td align=right>19.31722968</td>
+  <td align=right>1.084258513</td>
+  <td align=right>1.37980212</td>
+  <td align=right>1.113508814</td>
+  <td align=right>1.032271597</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>6250</td>
+  <td align=right>1200</td>
+  <td align=right>14</td>
+  <td align=right>139.1541071</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.19259019</td>
+  <td align=right>19.46772059</td>
+  <td align=right>1.085185013</td>
+  <td align=right>1.390551471</td>
+  <td align=right>1.114524008</td>
+  <td align=right>1.030895378</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>7500</td>
+  <td align=right>1500</td>
+  <td align=right>14</td>
+  <td align=right>167.6167143</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.24612136</td>
+  <td align=right>19.54824283</td>
+  <td align=right>1.089008669</td>
+  <td align=right>1.396303059</td>
+  <td align=right>1.119471102</td>
+  <td align=right>1.031536763</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>8750</td>
+  <td align=right>1700</td>
+  <td align=right>14</td>
+  <td align=right>246.2340756</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.23629607</td>
+  <td align=right>19.2262005</td>
+  <td align=right>1.088306862</td>
+  <td align=right>1.373300036</td>
+  <td align=right>1.137550489</td>
+  <td align=right>1.030824743</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>10000</td>
+  <td align=right>2000</td>
+  <td align=right>14</td>
+  <td align=right>437.798</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>15.04688058</td>
+  <td align=right>18.88598958</td>
+  <td align=right>1.074777185</td>
+  <td align=right>1.348999256</td>
+  <td align=right>1.129609696</td>
+  <td align=right>1.031387362</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>11250</td>
+  <td align=right>2200</td>
+  <td align=right>14</td>
+  <td align=right>583.2502922</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.90382468</td>
+  <td align=right>18.44289021</td>
+  <td align=right>1.064558906</td>
+  <td align=right>1.3173493</td>
+  <td align=right>1.117180126</td>
+  <td align=right>1.031071125</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential</td>
+  <td align=right>12500</td>
+  <td align=right>2500</td>
+  <td align=right>14</td>
+  <td align=right>755.8450571</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.93617143</td>
+  <td align=right>18.48998515</td>
+  <td align=right>1.066869388</td>
+  <td align=right>1.320713225</td>
+  <td align=right>1.118854668</td>
+  <td align=right>1.031504473</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 colspan=13 style='height:15.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>routing type</td>
+  <td>total vehicles</td>
+  <td>vehicles tracked</td>
+  <td>number of trips</td>
+  <td class=xl65>avg time to finish trip</td>
+  <td class=xl65>dijdiffavg</td>
+  <td class=xl65>dijdiff10%avg</td>
+  <td class=xl65>avg unfairness</td>
+  <td class=xl65>avg unfairness 10%</td>
+  <td class=xl65>avg unfairness normalised</td>
+  <td class=xl65>avg unfairness 10% normalised</td>
+  <td class=xl65>avg worst trip</td>
+  <td class=xl65>avg dijDiff Threshold</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>2500</td>
+  <td align=right>500</td>
+  <td align=right>14</td>
+  <td align=right>129.8168571</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.02915796</td>
+  <td align=right>14.28608479</td>
+  <td align=right>1.002082711</td>
+  <td align=right>1.020434628</td>
+  <td align=right>1.002082711</td>
+  <td align=right>1.034317323</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>3750</td>
+  <td align=right>700</td>
+  <td align=right>14</td>
+  <td align=right>131.8952041</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.10592463</td>
+  <td align=right>14.99069573</td>
+  <td align=right>1.007566045</td>
+  <td align=right>1.070763981</td>
+  <td align=right>1.00765606</td>
+  <td align=right>1.030657057</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>5000</td>
+  <td align=right>1000</td>
+  <td align=right>14</td>
+  <td align=right>179.4577143</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.10063222</td>
+  <td align=right>14.923547</td>
+  <td align=right>1.007188015</td>
+  <td align=right>1.065967643</td>
+  <td align=right>1.007438444</td>
+  <td align=right>1.031857073</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>6250</td>
+  <td align=right>1200</td>
+  <td align=right>14</td>
+  <td align=right>204.7541667</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.11362766</td>
+  <td align=right>15.01615479</td>
+  <td align=right>1.008116261</td>
+  <td align=right>1.072582485</td>
+  <td align=right>1.008523942</td>
+  <td align=right>1.031148259</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>7500</td>
+  <td align=right>1500</td>
+  <td align=right>14</td>
+  <td align=right>303.9142381</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.13229447</td>
+  <td align=right>15.15178048</td>
+  <td align=right>1.009449605</td>
+  <td align=right>1.082270035</td>
+  <td align=right>1.011036245</td>
+  <td align=right>1.031980606</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>8750</td>
+  <td align=right>1700</td>
+  <td align=right>14</td>
+  <td align=right>392.6026471</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.13898957</td>
+  <td align=right>15.21532853</td>
+  <td align=right>1.009927827</td>
+  <td align=right>1.086809181</td>
+  <td align=right>1.014389998</td>
+  <td align=right>1.031407379</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>10000</td>
+  <td align=right>2000</td>
+  <td align=right>14</td>
+  <td align=right>557.9208929</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.14577799</td>
+  <td align=right>15.18956697</td>
+  <td align=right>1.010412713</td>
+  <td align=right>1.084969069</td>
+  <td align=right>1.015710186</td>
+  <td align=right>1.031720812</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>11250</td>
+  <td align=right>2200</td>
+  <td align=right>14</td>
+  <td align=right>811.6771429</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.1278245</td>
+  <td align=right>15.12045453</td>
+  <td align=right>1.009130321</td>
+  <td align=right>1.080032467</td>
+  <td align=right>1.013450577</td>
+  <td align=right>1.031444523</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt'>Least Density Exponential w/ Dijkstra</td>
+  <td align=right>12500</td>
+  <td align=right>2500</td>
+  <td align=right>14</td>
+  <td align=right>981.7502</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td><span style='mso-spacerun:yes'> </span>Infinity</td>
+  <td align=right>14.14811676</td>
+  <td align=right>15.28289312</td>
+  <td align=right>1.010579769</td>
+  <td align=right>1.091635223</td>
+  <td align=right>1.016537375</td>
+  <td align=right>1.03187539</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 colspan=13 style='height:15.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=25 style='height:18.75pt'>
+  <td height=25 colspan=7 style='height:18.75pt;mso-ignore:colspan'></td>
+  <td class=xl66 dir=LTR></td>
+  <td colspan=5 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=200 style='height:150.0pt;mso-xlrowspan:10'>
+  <td height=200 colspan=13 style='height:150.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 colspan=2 style='height:15.0pt;mso-ignore:colspan'>1 +
+  0.5e^-(0.9 * unfairness/avgUnfairness)</td>
+  <td colspan=11 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 style='height:15.0pt' align=left valign=top><!--[if gte vml 1]><v:shapetype
+   id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+   path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+   <v:stroke joinstyle="miter"/>
+   <v:formulas>
+    <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+    <v:f eqn="sum @0 1 0"/>
+    <v:f eqn="sum 0 0 @1"/>
+    <v:f eqn="prod @2 1 2"/>
+    <v:f eqn="prod @3 21600 pixelWidth"/>
+    <v:f eqn="prod @3 21600 pixelHeight"/>
+    <v:f eqn="sum @0 0 1"/>
+    <v:f eqn="prod @6 1 2"/>
+    <v:f eqn="prod @7 21600 pixelWidth"/>
+    <v:f eqn="sum @8 21600 0"/>
+    <v:f eqn="prod @7 21600 pixelHeight"/>
+    <v:f eqn="sum @10 21600 0"/>
+   </v:formulas>
+   <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+   <o:lock v:ext="edit" aspectratio="t"/>
+  </v:shapetype><v:shape id="Chart_x0020_1" o:spid="_x0000_s3073" type="#_x0000_t75"
+   style='position:absolute;margin-left:0;margin-top:14.25pt;width:536.25pt;
+   height:304.5pt;z-index:1;visibility:visible' o:gfxdata="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
+">
+   <v:imagedata src="image009.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><v:shape id="Chart_x0020_2" o:spid="_x0000_s3074" type="#_x0000_t75"
+   style='position:absolute;margin-left:0;margin-top:318pt;width:536.25pt;
+   height:304.5pt;z-index:2;visibility:visible' o:gfxdata="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
+eG1sUEsFBgAAAAAJAAkAUgIAAIcbAAAAAA==
+">
+   <v:imagedata src="image010.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><v:shape id="Chart_x0020_3" o:spid="_x0000_s3075" type="#_x0000_t75"
+   style='position:absolute;margin-left:534pt;margin-top:318pt;width:545.25pt;
+   height:304.5pt;z-index:3;visibility:visible' o:gfxdata="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
+AAAA
+">
+   <v:imagedata src="image011.png" o:title=""/>
+   <o:lock v:ext="edit" aspectratio="f"/>
+   <x:ClientData ObjectType="Pict">
+    <x:SizeWithCells/>
+    <x:CF>Bitmap</x:CF>
+    <x:AutoPict/>
+   </x:ClientData>
+  </v:shape><![endif]--><![if !vml]><span style='mso-ignore:vglayout;
+  position:absolute;z-index:1;margin-left:0px;margin-top:19px;width:1439px;
+  height:811px'><img width=1439 height=811 src=image012.png v:shapes="Chart_x0020_1 Chart_x0020_2 Chart_x0020_3"></span><![endif]><span
+  style='mso-ignore:vglayout2'>
+  <table cellpadding=0 cellspacing=0>
+   <tr>
+    <td height=20 width=237 style='height:15.0pt;width:178pt'></td>
+   </tr>
+  </table>
+  </span></td>
+  <td colspan=12 style='mso-ignore:colspan'></td>
+ </tr>
+ <tr height=820 style='height:615.0pt;mso-xlrowspan:41'>
+  <td height=820 colspan=13 style='height:615.0pt;mso-ignore:colspan'></td>
+ </tr>
+ <![if supportMisalignedColumns]>
+ <tr height=0 style='display:none'>
+  <td width=237 style='width:178pt'></td>
+  <td width=113 style='width:85pt'></td>
+  <td width=113 style='width:85pt'></td>
+  <td width=109 style='width:82pt'></td>
+  <td width=141 style='width:106pt'></td>
+  <td width=113 style='width:85pt'></td>
+  <td width=113 style='width:85pt'></td>
+  <td width=113 style='width:85pt'></td>
+  <td width=129 style='width:97pt'></td>
+  <td width=185 style='width:139pt'></td>
+  <td width=206 style='width:155pt'></td>
+  <td width=97 style='width:73pt'></td>
+  <td width=148 style='width:111pt'></td>
+ </tr>
+ <![endif]>
+</table>
+
+</body>
+
+</html>

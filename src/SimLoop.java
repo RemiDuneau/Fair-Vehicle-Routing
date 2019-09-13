@@ -19,7 +19,8 @@ public class SimLoop {
     public static void main(String[] args) throws IOException {
         for (double proportion = 0.1; proportion < 1; proportion+=0.2) {
             //FileWriter fileWriter = new FileWriter("longTermDijOnly" + (int) ((proportion*100 + 0.1)) + "scatter.csv", true);
-            FileWriter fileWriter = new FileWriter("longTermDijOnlyRoadDensityCheck.csv", true);
+            //FileWriter fileWriter = new FileWriter("longTermDijOnlyRoadDensityCheckAllVehicles.csv", true);
+            FileWriter fileWriter = new FileWriter("results.csv", true);
             BufferedWriter writer = new BufferedWriter(fileWriter);
             boolean isWrite = true;
             int[] routingTypes = {0};
@@ -196,7 +197,8 @@ public class SimLoop {
                     //average density
                     double averageDensitySum = 0;
                     for (int i = 0; i < roads.size(); i++) {
-                        double add = roads.get(i).getDensitySum() / (double) controller.getTrackedTimeIncrements();
+                        //double add = roads.get(i).getDensitySum() / (double) controller.getTrackedTimeIncrements();
+                        double add = roads.get(i).getTotalDensitySum() / (double) controller.getTotalTimeIncrements();
                         longTermDensities.set(i, longTermDensities.get(i) + add);
                     }
                     //System.out.println("Total average density = " + totalAverageDensity);

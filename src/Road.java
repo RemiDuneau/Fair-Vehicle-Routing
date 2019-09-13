@@ -17,7 +17,7 @@ public class Road {
     private int length, maxSpeed, currentSpeed, totalVehiclesAdded = 0, maxVehicles;
 
     //state variables
-    private double density, densitySum = 0; //proportion of occupied cells
+    private double density, densitySum = 0, totalDensitySum = 0; //proportion of occupied cells
 
     public int calculateCurrentSpeed() {
         calculateDensity();
@@ -39,7 +39,10 @@ public class Road {
      */
     public void incrementDensitySum() {
         calculateDensity();
-        if (SimLoop.isTrackingVehicles && !TimeController.isFutureSim) densitySum += density;
+        if(!TimeController.isFutureSim) {
+            if (SimLoop.isTrackingVehicles) densitySum += density;
+            totalDensitySum += density;
+        }
     }
 
 
@@ -109,6 +112,10 @@ public class Road {
 
     public double getDensitySum() {
         return densitySum;
+    }
+
+    public double getTotalDensitySum() {
+        return totalDensitySum;
     }
 
     public void addVehicle(Vehicle vehicle) {
